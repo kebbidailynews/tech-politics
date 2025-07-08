@@ -1,4 +1,6 @@
 // src/app/post/[slug]/page.tsx
+export const runtime = "nodejs";
+
 import client from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity";
 import Image from "next/image";
