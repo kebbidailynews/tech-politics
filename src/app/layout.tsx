@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import LayoutWrapper from '@/components/LayoutWrapper'; // Corrected import
+import LayoutWrapper from '@/components/LayoutWrapper';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -9,7 +9,6 @@ const geistSans = Geist({
   display: 'swap',
   fallback: ['system-ui', 'sans-serif'],
   preload: true,
-  adjustPreloading: true,
 });
 
 const geistMono = Geist_Mono({
@@ -18,7 +17,6 @@ const geistMono = Geist_Mono({
   display: 'swap',
   fallback: ['monospace'],
   preload: true,
-  adjustPreloading: true,
 });
 
 export const metadata: Metadata = {
