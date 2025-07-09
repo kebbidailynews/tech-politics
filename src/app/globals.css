@@ -24,38 +24,37 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans); /* Use Geist fonts */
+  font-family: var(--font-geist-sans);
 }
 
-/* Ensure header and title are always visible */
+/* Title and header visibility */
 nav {
-  display: block !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 nav h1 {
-  display: block !important;
-  visibility: visible !important;
-  line-height: 1.2; /* Ensure text is not clipped */
+  display: block;
+  visibility: visible;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  flex-grow: 1;
+  min-width: 0;
+  z-index: 50; /* Ensure it sits above mobile menu */
 }
 
 /* Fallback for browsers that don't support bg-clip-text */
 @supports not (-webkit-background-clip: text) {
   nav h1 span {
-    color: #2563eb; /* Fallback color for gradient */
+    color: #2563eb;
     background: none;
   }
 }
 
-/* Prevent layout shifts on mobile */
-@media (max-width: 768px) {
-  nav {
-    display: flex !important;
-    align-items: center;
-  }
+/* Adjust font-size on larger screens */
+@media (min-width: 640px) {
   nav h1 {
-    display: block !important;
-    visibility: visible !important;
-    font-size: 1.25rem; /* Slightly smaller for mobile */
-    flex-grow: 1;
+    font-size: 1.5rem;
   }
 }

@@ -21,7 +21,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'TechPolitics',
-  description: 'Exploring the intersection of technology and politics, covering AI governance, tech regulation, and global innovation trends.',
+  description:
+    'Exploring the intersection of technology and politics, covering AI governance, tech regulation, and global innovation trends.',
   openGraph: {
     title: 'TechPolitics',
     description: 'Exploring the intersection of technology and politics.',
@@ -52,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
