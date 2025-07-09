@@ -17,9 +17,9 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <nav className="sticky top-0 z-50 bg-white dark:bg-neutral-900 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           {/* Title */}
-          <h1 className="text-xl sm:text-2xl font-bold">
+          <h1 className="text-xl sm:text-2xl font-bold flex-shrink-0">
             <Link href="/" aria-label="TechPolitics Home">
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text">
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text fallback-text">
                 TechPolitics
               </span>
             </Link>
@@ -51,9 +51,9 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             </div>
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden text-gray-800 dark:text-gray-100"
+              className="md:hidden text-gray-800 dark:text-gray-100 ml-4"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              aria-label={sidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
+              aria-label={sidebarOpen ? 'Close Menu' : 'Open Menu'}
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -117,7 +117,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
                 {['AI Governance', 'Tech Regulation', 'Digital Privacy', 'Innovation Trends'].map((topic, index) => (
                   <li key={index}>
                     <Link
-                      href={`/category/${topic.toLowerCase().replace(/\s/g, '-')} `}
+                      href={`/category/${topic.toLowerCase().replace(/\s/g, '-')}`}
                       className="text-sm hover:text-blue-600 dark:hover:text-blue-400 transition"
                       aria-label={`View ${topic} category`}
                       onClick={() => setSidebarOpen(false)}

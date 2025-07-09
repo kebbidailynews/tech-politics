@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-geist-sans: 'Geist', sans-serif;
+  --font-geist-mono: 'Geist Mono', monospace;
 }
 
 @theme inline {
@@ -22,6 +24,38 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans); /* Use Geist fonts */
 }
 
+/* Ensure header and title are always visible */
+nav {
+  display: block !important;
+}
+
+nav h1 {
+  display: block !important;
+  visibility: visible !important;
+  line-height: 1.2; /* Ensure text is not clipped */
+}
+
+/* Fallback for browsers that don't support bg-clip-text */
+@supports not (-webkit-background-clip: text) {
+  nav h1 span {
+    color: #2563eb; /* Fallback color for gradient */
+    background: none;
+  }
+}
+
+/* Prevent layout shifts on mobile */
+@media (max-width: 768px) {
+  nav {
+    display: flex !important;
+    align-items: center;
+  }
+  nav h1 {
+    display: block !important;
+    visibility: visible !important;
+    font-size: 1.25rem; /* Slightly smaller for mobile */
+    flex-grow: 1;
+  }
+}
