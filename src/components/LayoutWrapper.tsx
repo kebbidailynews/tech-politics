@@ -1,0 +1,125 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { Menu, X } from 'lucide-react'; // Assuming you're using lucide-react for icons
+
+interface LayoutWrapperProps {
+  children: React.ReactNode;
+}
+
+export default function LayoutWrapper({ children }: LayoutWrapperProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to false for mobile
+
+  return (
+    <div className="min-h-screen">
+      {/* Sticky Header */}
+      <nav className="sticky top-0 z-50 bg-white dark:bg-neutral-900 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <h1 className="text-xl sm:text-2xl font-bold">
+            <Link href="/" aria-label="TechPolitics Home">
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text">
+                TechPolitics
+              </span>
+            </Link>
+          </h1>
+          <div className="hidden md:flex space-x-4 sm:space-x-6">
+            <Link
+              href="/"
+              className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+              aria-label="Home Page"
+            >
+              Home
+            </Link>
+            <Link
+              href="/categories"
+              className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+              aria-label="Categories Page"
+            >
+              Categories
+            </Link>
+            <Link
+              href="/about"
+              className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+              aria-label="About Page"
+            >
+              About
+            </Link>
+          </div>
+          <button
+            className="md:hidden text-gray-800 dark:text-gray-100"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label={sidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
+          >
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Sidebar + Main */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-6">
+        {/* Sidebar */}
+        <aside
+          className={`${
+            sidebarOpen ? 'block' : 'hidden'
+          } lg:block w-full lg:w-1/4 transition-all duration-300`}
+          aria-hidden={!sidebarOpen}
+        >
+          <div className="sticky top-20 space-y-6">
+            <div className="bg-white dark:bg-neutral-900 rounded-lg shadow p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold">Trending Topics</h3>
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline lg:hidden"
+                  aria-label={sidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
+                >
+                  {sidebarOpen ? 'Collapse' : 'Expand'}
+                </button>
+              </div>
+              <ul className="space-y-2">
+                {['AI Governance', 'Tech Regulation', 'Digital Privacy', 'Innovation Trends'].map((topic, index) => (
+                  <li key={index}>
+                    <Link
+                      href={`/category/${topic.toLowerCase().replace(/\s/g, '-')}`}
+                      className="text-sm hover:text-blue-600 dark:hover:text-blue-400 transition"
+                      aria-label={`View ${topic} category`}
+                    >
+                      {topic}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white dark:bg-neutral-900 rounded-lg shadow p-5">
+              <h3 className="text-base font-bold mb-3">Quick Links</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    href="/archive"
+                    className="text-sm hover:text-blue-600 dark:hover:text-blue-400 transition"
+                    aria-label="View Article Archive"
+                  >
+                    Article Archive
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="text-sm hover:text-blue-600 dark:hover:text-blue-400 transition"
+                    aria-label="Contact Us"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content area */}
+        <main className="w-full lg:w-3/4">{children}</main>
+      </div>
+    </div>
+  );
+}
