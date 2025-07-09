@@ -20,7 +20,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
           <h1 className="text-xl sm:text-2xl font-bold flex-shrink-0">
             <Link href="/" aria-label="TechPolitics Home">
               <span className="bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text fallback-text">
-                TechPolitics
+                Tech
               </span>
             </Link>
           </h1>
