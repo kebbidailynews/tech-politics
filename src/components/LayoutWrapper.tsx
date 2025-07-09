@@ -2,25 +2,25 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react'; // Ensure lucide-react is installed
+import { Menu, X } from 'lucide-react';
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
 }
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar closed by default on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen">
       {/* Sticky Header */}
       <nav className="sticky top-0 z-50 bg-white dark:bg-neutral-900 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between flex-wrap">
           {/* Title */}
-          <h1 className="text-xl sm:text-2xl font-bold flex-shrink-0">
+          <h1 className="text-xl sm:text-2xl font-bold flex-shrink-0 z-50">
             <Link href="/" aria-label="TechPolitics Home">
               <span className="bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text fallback-text">
-                Tech
+                TechPolitics
               </span>
             </Link>
           </h1>
@@ -59,6 +59,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             </button>
           </div>
         </div>
+
         {/* Mobile Navigation Menu */}
         {sidebarOpen && (
           <div className="md:hidden bg-white dark:bg-neutral-900 shadow-md">
