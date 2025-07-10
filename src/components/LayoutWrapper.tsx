@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react'; // Ensure lucide-react is installed
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
 }
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar closed by default on mobile
 
   return (
     <div className="min-h-screen">
       {/* Sticky Header */}
       <nav className="sticky top-0 z-50 bg-white dark:bg-neutral-900 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between flex-wrap">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           {/* Title */}
-          <h1 className="text-xl sm:text-2xl font-bold flex-shrink-0 z-50">
+          <h1 className="text-xl sm:text-2xl font-bold flex-shrink-0">
             <Link href="/" aria-label="TechPolitics Home">
               <span className="bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text fallback-text">
                 TechPolitics
@@ -35,18 +35,32 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
                 Home
               </Link>
               <Link
-                href="/categories"
-                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
-                aria-label="Categories Page"
-              >
-                Categories
-              </Link>
-              <Link
                 href="/about"
                 className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
-                aria-label="About Page"
+                aria-label="About Us Page"
               >
-                About
+                About Us
+              </Link>
+              <Link
+                href="/blog"
+                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                aria-label="Blog or News Page"
+              >
+                Blog/News
+              </Link>
+              <Link
+                href="/contact"
+                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                aria-label="Contact Page"
+              >
+                Contact
+              </Link>
+              <Link
+                href="/privacy-policy"
+                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                aria-label="Privacy Policy Page"
+              >
+                Privacy Policy
               </Link>
             </div>
             {/* Mobile Menu Button */}
@@ -59,7 +73,6 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             </button>
           </div>
         </div>
-
         {/* Mobile Navigation Menu */}
         {sidebarOpen && (
           <div className="md:hidden bg-white dark:bg-neutral-900 shadow-md">
@@ -73,20 +86,36 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
                 Home
               </Link>
               <Link
-                href="/categories"
-                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
-                aria-label="Categories Page"
-                onClick={() => setSidebarOpen(false)}
-              >
-                Categories
-              </Link>
-              <Link
                 href="/about"
                 className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
-                aria-label="About Page"
+                aria-label="About Us Page"
                 onClick={() => setSidebarOpen(false)}
               >
-                About
+                About Us
+              </Link>
+              <Link
+                href="/blog"
+                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                aria-label="Blog or News Page"
+                onClick={() => setSidebarOpen(false)}
+              >
+                Blog/News
+              </Link>
+              <Link
+                href="/contact"
+                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                aria-label="Contact Page"
+                onClick={() => setSidebarOpen(false)}
+              >
+                Contact
+              </Link>
+              <Link
+                href="/privacy-policy"
+                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                aria-label="Privacy Policy Page"
+                onClick={() => setSidebarOpen(false)}
+              >
+                Privacy Policy
               </Link>
             </div>
           </div>
