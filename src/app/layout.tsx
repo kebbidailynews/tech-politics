@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'TechPolitics',
     description: 'Exploring the intersection of technology and politics.',
-    url: 'https://yourwebsite.com', // Replace with actual URL
+    url: 'https://thetechpolitics.com', // Replace with actual URL
     siteName: 'TechPolitics',
     images: [
       {
