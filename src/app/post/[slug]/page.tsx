@@ -25,50 +25,12 @@ interface Post {
   body: PortableTextBlock[];
 }
 
-type Props = {
+// ✅ Do NOT wrap this type in Promise or NextPage etc.
+export default async function PostPage({
+  params,
+}: {
   params: { slug: string };
-};
-
-// Custom components for PortableText to match your styling
-const components: PortableTextComponents = {
-  block: {
-    h1: ({ children }) => <h1 className="text-4xl font-bold mb-6">{children}</h1>,
-    h2: ({ children }) => <h2 className="text-2xl font-semibold mt-8 mb-4">{children}</h2>,
-    h3: ({ children }) => <h3 className="text-xl font-semibold mt-6 mb-3">{children}</h3>,
-    normal: ({ children }) => <p className="mb-4 text-lg leading-relaxed">{children}</p>,
-  },
-  list: {
-    bullet: ({ children }) => (
-      <ul className="list-disc list-inside space-y-2 mb-6 text-lg leading-relaxed">
-        {children}
-      </ul>
-    ),
-    number: ({ children }) => (
-      <ol className="list-decimal list-inside space-y-2 mb-6 text-lg leading-relaxed">
-        {children}
-      </ol>
-    ),
-  },
-  marks: {
-    link: ({ value, children }) => {
-      const href = value.href || "";
-      const isExternal = href.startsWith("http");
-      return (
-        <a
-          href={href}
-          target={isExternal ? "_blank" : undefined}
-          rel={isExternal ? "noopener noreferrer" : undefined}
-          className="text-blue-600 hover:underline"
-        >
-          {children}
-        </a>
-      );
-    },
-    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-  },
-};
-
-export default async function PostPage({ params }: Props) {
+}) {
   const query = `*[_type == "post" && slug.current == $slug][0]{
     _id, title, slug, mainImage, body
   }`;
@@ -93,10 +55,44 @@ export default async function PostPage({ params }: Props) {
         />
       )}
 
-      {/* Render PortableText with custom styles */}
       <div>
         <PortableText value={post.body} components={components} />
       </div>
     </article>
   );
 }
+
+// PortableText components
+const components: PortableTextComponents = {
+  block: {
+    h1: ({ children }) => <h1 className="text-4xl font-bold mb-6">{children}</h1>,
+    h2: ({ children }) => <h2 className="text-2xl font-semibold mt-8 mb-4">{children}</h2>,
+    h3: ({ children }) => <h3 className="text-xl font-semibold mt-6 mb-3">{children}</h3>,
+    normal: ({ children }) => <p className="mb-4 text-lg leading-relaxed">{children}</p>,
+  },
+  list: {
+    bullet: ({ children }) => (
+      <ul className="list-disc list-inside space-y-2 mb-6 text-lg leading-relaxed">{children}</ul>
+    ),
+    number: ({ children }) => (
+      <ol className="list-decimal list-inside space-y-2 mb-6 text-lg leading-relaxed">{children}</ol>
+    ),
+  },
+  marks: {
+    link: ({ value, children }) => {
+      const href = value.href || "";
+      const isExternal = href.startsWith("http");
+      return (
+        <a
+          href={href}
+          target={isExternal ? "_blank" : undefined}
+          rel={isExternal ? "noopener noreferrer" : undefined}
+          className="text-blue-600 hover:underline"
+        >
+          {children}
+        </a>
+      );
+    },
+    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  },
+};
