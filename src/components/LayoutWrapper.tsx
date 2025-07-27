@@ -1,5 +1,5 @@
 // src/app/layout-wrapper.tsx
-import client from "@/lib/sanity"; // Ensure this is the correct import path
+import client from "@/lib/sanity";
 import ClientLayout from "./client-layout";
 
 interface Category {
@@ -21,5 +21,5 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
   }`;
   const categories: Category[] = await client.fetch(query);
 
-  return <ClientLayout categories={categories} children={children} />;
+  return <ClientLayout categories={categories}>{children}</ClientLayout>;
 }
