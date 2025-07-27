@@ -1,4 +1,9 @@
-// src/app/post/[slug]/page.tsx
+import { NextPage } from "next";
+
+// Define the props type explicitly
+interface PostPageProps {
+  params: { slug: string };
+}
 
 export const runtime = "nodejs";
 
@@ -25,12 +30,8 @@ interface Post {
   body: PortableTextBlock[];
 }
 
-// ✅ No `Promise<any>` here — type params directly
-export default async function PostPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+// Use NextPage with explicit props type
+const PostPage: NextPage<PostPageProps> = async ({ params }) => {
   const query = `*[_type == "post" && slug.current == $slug][0]{
     _id, title, slug, mainImage, body
   }`;
@@ -60,7 +61,9 @@ export default async function PostPage({
       </div>
     </article>
   );
-}
+};
+
+export default PostPage;
 
 // Custom components for PortableText
 const components: PortableTextComponents = {
