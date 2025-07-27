@@ -1,10 +1,4 @@
-import { NextPage } from "next";
-
-// Define the props type explicitly
-interface PostPageProps {
-  params: { slug: string };
-}
-
+// src/app/post/[slug]/page.tsx
 export const runtime = "nodejs";
 
 import client from "@/lib/sanity";
@@ -13,7 +7,6 @@ import Image from "next/image";
 import { PortableText, PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 
-// Define types for post content
 interface SanityImage {
   _type: string;
   asset: {
@@ -30,8 +23,11 @@ interface Post {
   body: PortableTextBlock[];
 }
 
-// Use NextPage with explicit props type
-const PostPage: NextPage<PostPageProps> = async ({ params }) => {
+interface PostPageProps {
+  params: { slug: string };
+}
+
+export default async function PostPage({ params }: PostPageProps) {
   const query = `*[_type == "post" && slug.current == $slug][0]{
     _id, title, slug, mainImage, body
   }`;
@@ -43,9 +39,8 @@ const PostPage: NextPage<PostPageProps> = async ({ params }) => {
   }
 
   return (
-    <article className="max-w-3xl mx-auto p-6">
+    <article className="p-6 max-w-3xl mx-auto">
       <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
-
       {post.mainImage && (
         <Image
           src={urlFor(post.mainImage).width(1200).url()}
@@ -55,17 +50,14 @@ const PostPage: NextPage<PostPageProps> = async ({ params }) => {
           className="rounded-lg mb-6"
         />
       )}
-
-      <div>
+      <div className="prose prose-lg">
         <PortableText value={post.body} components={components} />
       </div>
     </article>
   );
-};
+}
 
-export default PostPage;
-
-// Custom components for PortableText
+// Custom components for PortableText (restored from your edited version)
 const components: PortableTextComponents = {
   block: {
     h1: ({ children }) => <h1 className="text-4xl font-bold mb-6">{children}</h1>,
