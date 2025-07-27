@@ -8,6 +8,7 @@ import Image from "next/image";
 import { PortableText, PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 
+// Types
 interface SanityImage {
   _type: string;
   asset: {
@@ -24,9 +25,9 @@ interface Post {
   body: PortableTextBlock[];
 }
 
-interface Params {
-  slug: string;
-}
+type Props = {
+  params: { slug: string };
+};
 
 // Custom components for PortableText to match your styling
 const components: PortableTextComponents = {
@@ -67,11 +68,7 @@ const components: PortableTextComponents = {
   },
 };
 
-export default async function PostPage({
-  params,
-}: {
-  params: Params;
-}) {
+export default async function PostPage({ params }: Props) {
   const query = `*[_type == "post" && slug.current == $slug][0]{
     _id, title, slug, mainImage, body
   }`;
