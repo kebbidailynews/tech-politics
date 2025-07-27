@@ -1,10 +1,12 @@
 // src/app/post/[slug]/page.tsx
+
 export const runtime = "nodejs";
 
 import client from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity";
 import Image from "next/image";
 import { PortableText, PortableTextComponents } from "@portabletext/react";
+import type { PortableTextBlock } from "@portabletext/types";
 
 interface SanityImage {
   _type: string;
@@ -19,7 +21,7 @@ interface Post {
   title: string;
   slug: { current: string };
   mainImage: SanityImage | null;
-  body: any[];
+  body: PortableTextBlock[];
 }
 
 interface Params {
