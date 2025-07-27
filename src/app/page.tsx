@@ -1,3 +1,4 @@
+// src/app/page.tsx
 import client from '@/lib/sanity';
 import { urlFor } from '@/lib/sanity';
 import Image from 'next/image';
@@ -48,7 +49,10 @@ export default async function HomePage() {
       {/* Featured Story */}
       {featured ? (
         <section className="mb-10">
-          <Link href={`/post/${featured.slug.current}`} aria-label={`Read full article: ${featured.title}`}>
+          <Link
+            href={`/post/${featured.slug.current}`}
+            aria-label={`Read full article: ${featured.title}`}
+          >
             <article className="rounded-lg bg-white dark:bg-neutral-900 shadow-md hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row gap-4 p-4">
               {featured.mainImage && (
                 <div className="relative w-full sm:w-1/3 h-32 sm:h-40">
@@ -62,7 +66,9 @@ export default async function HomePage() {
                 </div>
               )}
               <div className="flex-1">
-                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase mb-1">Featured Story</p>
+                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase mb-1">
+                  Featured Story
+                </p>
                 <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition">
                   {featured.title}
                 </h2>
@@ -71,14 +77,22 @@ export default async function HomePage() {
           </Link>
         </section>
       ) : (
-        !error && <p className="text-center text-gray-600 dark:text-gray-400">No featured post available</p>
+        !error && (
+          <p className="text-center text-gray-600 dark:text-gray-400">
+            No featured post available
+          </p>
+        )
       )}
 
       {/* Latest Posts */}
       {latest.length > 0 ? (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {latest.map((post) => (
-            <Link href={`/post/${post.slug.current}`} key={post._id} aria-label={`Read full article: ${post.title}`}>
+            <Link
+              href={`/post/${post.slug.current}`}
+              key={post._id}
+              aria-label={`Read full article: ${post.title}`}
+            >
               <article className="rounded-lg bg-white dark:bg-neutral-900 shadow hover:shadow-md transition-all duration-300">
                 {post.mainImage && (
                   <div className="relative w-full h-32">
@@ -102,19 +116,27 @@ export default async function HomePage() {
           ))}
         </section>
       ) : (
-        !error && <p className="text-center text-gray-600 dark:text-gray-400">No posts available</p>
+        !error && (
+          <p className="text-center text-gray-600 dark:text-gray-400">
+            No posts available
+          </p>
+        )
       )}
 
       {/* Newsletter CTA */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 mt-10 rounded-lg p-6 sm:p-8 text-center text-white">
-        <h3 className="text-xl sm:text-2xl font-bold mb-2">Join the TechPolitics Community</h3>
+        <h3 className="text-xl sm:text-2xl font-bold mb-2">
+          Join the TechPolitics Community
+        </h3>
         <p className="text-sm sm:text-base text-blue-100 mb-4 max-w-xl mx-auto">
-          Stay updated with 5,000 readers on AI governance, tech regulation, and global innovation trends.
+          Stay updated with 5,000 readers on AI governance, tech regulation, and global
+          innovation trends.
         </p>
+
+        {/* ✅ Formspree subscription form */}
         <form
-          action="https://YOUR_MAILERLITE_FORM_URL"
-          method="post"
-          target="_blank"
+          action="https://formspree.io/f/mdkdgrvd" // Your Formspree endpoint
+          method="POST"
           className="max-w-sm mx-auto flex flex-col sm:flex-row gap-3"
         >
           <input
