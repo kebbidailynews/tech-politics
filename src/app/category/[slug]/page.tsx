@@ -31,7 +31,12 @@ interface Params {
   slug: string;
 }
 
-export default async function CategoryPage({ params }: { params: Params }) {
+export default async function CategoryPage(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  { params }: { params: any } /* cast below to Params */
+) {
+  const safeParams = params as Params;
+
   // Fetch category and associated posts
   const query = `
     *[_type == "category" && slug.current == $slug][0]{
@@ -45,7 +50,7 @@ export default async function CategoryPage({ params }: { params: Params }) {
       }
     }
   `;
-  const category: Category = await client.fetch(query, { slug: params.slug });
+  const category: Category = await client.fetch(query, { slug: safeParams.slug });
 
   if (!category) {
     return (
