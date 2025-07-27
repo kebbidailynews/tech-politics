@@ -8,7 +8,7 @@ import Image from "next/image";
 import { PortableText, PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 
-// Types
+// Define types for post content
 interface SanityImage {
   _type: string;
   asset: {
@@ -25,7 +25,7 @@ interface Post {
   body: PortableTextBlock[];
 }
 
-// ✅ Do NOT wrap this type in Promise or NextPage etc.
+// ✅ No `Promise<any>` here — type params directly
 export default async function PostPage({
   params,
 }: {
@@ -62,7 +62,7 @@ export default async function PostPage({
   );
 }
 
-// PortableText components
+// Custom components for PortableText
 const components: PortableTextComponents = {
   block: {
     h1: ({ children }) => <h1 className="text-4xl font-bold mb-6">{children}</h1>,
