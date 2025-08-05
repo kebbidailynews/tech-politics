@@ -26,11 +26,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'TechPolitics',
     description: 'Exploring the intersection of technology and politics.',
-    url: 'https://thetechpolitics.com', // Replace with actual URL
+    url: 'https://thetechpolitics.com',
     siteName: 'TechPolitics',
     images: [
       {
-        url: '/og-image.jpg', // Add an Open Graph image
+        url: '/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'TechPolitics',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TechPolitics',
     description: 'Exploring the intersection of technology and politics.',
-    images: ['/og-image.jpg'], // Add Twitter image
+    images: ['/og-image.jpg'],
   },
 };
 
@@ -57,6 +57,7 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="google-adsense-account" content="ca-pub-8458799741626167" />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body
