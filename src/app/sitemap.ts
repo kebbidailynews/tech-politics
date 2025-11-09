@@ -1,6 +1,19 @@
 // src/app/sitemap.ts
 import { MetadataRoute } from 'next';
-import { client } from '@/lib/sanity'; // adjust import to your Sanity client
+import { client } from '@/lib/sanity';
+
+interface SanitySlug {
+  current: string;
+}
+
+interface Post {
+  slug: SanitySlug;
+  _updatedAt: string;
+}
+
+interface Category {
+  slug: SanitySlug;
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 1. Static pages
@@ -37,32 +50,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // 2. Fetch dynamic blog posts from Sanity
-  const posts = await client.fetch(`
+  // 2. Fetch dynamic blog posts
+  const posts: Post[] = await client.fetch(`
     *[_type == "post" && defined(slug.current)] {
       slug,
       _updatedAt
     }
   `);
 
-  const blogPosts: MetadataRoute.Sitemap = posts.map((post: any) => ({
+  const blogPosts: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `https://thetechpolitics.com/blog/${post.slug.current}`,
     lastModified: new Date(post._updatedAt),
-    changeFrequency: 'weekly' as const,
+    changeFrequency: 'weekly',
     priority: 0.7,
   }));
 
   // 3. Fetch categories
-  const categories = await client.fetch(`
+  const categories: Category[] = await client.fetch(`
     *[_type == "category" && defined(slug.current)] {
       slug
     }
   `);
 
-  const categoryPages: MetadataRoute.Sitemap = categories.map((cat: any) => ({
+  const categoryPages: MetadataRoute.Sitemap = categories.map((cat) => ({
     url: `https://thetechpolitics.com/category/${cat.slug.current}`,
     lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
+    changeFrequency: 'weekly',
     priority: 0.6,
   }));
 

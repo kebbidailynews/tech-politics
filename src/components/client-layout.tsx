@@ -1,8 +1,8 @@
-// src/app/client-layout.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { Menu, X, ChevronDown } from 'lucide-react';
 
 interface Category {
@@ -36,14 +36,18 @@ export default function ClientLayout({ children, categories }: ClientLayoutProps
 
   return (
     <>
-      {/* SEO & Accessibility */}
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+      {/* ✅ Proper Head section */}
+      <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        />
         <link rel="icon" href="/favicon.ico" />
-      </head>
+        <title>TechPolitics</title>
+      </Head>
 
       <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
-        {/* Sticky Header - CNN Style */}
+        {/* Sticky Header */}
         <header
           className={`sticky top-0 z-50 transition-shadow duration-200 ${
             scrolled ? 'shadow-lg' : 'shadow'
@@ -51,7 +55,7 @@ export default function ClientLayout({ children, categories }: ClientLayoutProps
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-18">
-              {/* Logo - Always Visible */}
+              {/* Logo */}
               <div className="flex-shrink-0">
                 <Link href="/" className="block" aria-label="TechPolitics - Home">
                   <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -177,10 +181,12 @@ export default function ClientLayout({ children, categories }: ClientLayoutProps
         {/* Main Content + Sidebar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar - Desktop Sticky, Mobile Hidden */}
+            {/* Sidebar */}
             <aside
               className={`${
-                sidebarOpen ? 'block fixed inset-0 z-30 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm lg:static lg:block' : 'hidden lg:block'
+                sidebarOpen
+                  ? 'block fixed inset-0 z-30 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm lg:static lg:block'
+                  : 'hidden lg:block'
               } lg:w-80 xl:w-72 flex-shrink-0`}
             >
               <div className="lg:sticky lg:top-24 space-y-6">
@@ -253,7 +259,7 @@ export default function ClientLayout({ children, categories }: ClientLayoutProps
           </div>
         </div>
 
-        {/* Optional: Mobile Sidebar Toggle Button (Bottom Floating) */}
+        {/* Mobile Sidebar Toggle */}
         <button
           onClick={() => setSidebarOpen(true)}
           className="lg:hidden fixed bottom-6 right-6 z-40 bg-blue-600 text-white p-4 rounded-full shadow-xl hover:bg-blue-700 transition transform active:scale-95"

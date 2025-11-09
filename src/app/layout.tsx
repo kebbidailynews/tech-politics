@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import LayoutWrapper from '@/components/LayoutWrapper';
+import Script from 'next/script';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -34,7 +35,6 @@ const primaryKeywords = [
 ];
 
 export const metadata: Metadata = {
-  // Dynamic title template
   title: {
     default: 'TechPolitics: China Leads USA in AI, Quantum & 6G | Africa Rising',
     template: '%s | TechPolitics',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'TechPolitics', url: 'https://thetechpolitics.com/about' }],
   creator: 'TechPolitics',
 
-  // === Open Graph (Facebook, LinkedIn, etc.) ===
+  // === Open Graph ===
   openGraph: {
     title: 'China Surpasses USA in AI, Quantum & 6G | TechPolitics',
     description: 'Deep dives into China’s tech dominance over the US + Africa’s rising innovation ecosystem.',
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     siteName: 'TechPolitics',
     images: [
       {
-        url: 'https://thetechpolitics.com/og-china-lead.jpg', // Create this image!
+        url: 'https://thetechpolitics.com/og-china-lead.jpg',
         width: 1200,
         height: 630,
         alt: 'China Leads USA in AI, Quantum Computing, and 6G – TechPolitics',
@@ -65,13 +65,13 @@ export const metadata: Metadata = {
   // === Twitter Cards ===
   twitter: {
     card: 'summary_large_image',
-    site: '@TechPolitics', // Update when you have X handle
+    site: '@TechPolitics',
     title: 'China Now Leads USA in AI & Quantum | Africa Tech Rising',
     description: 'China files 3x more AI patents than US. Africa’s fintech & AI boom. Daily updates.',
     images: ['https://thetechpolitics.com/og-china-lead.jpg'],
   },
 
-  // === Robots & Indexing ===
+  // === Robots ===
   robots: {
     index: true,
     follow: true,
@@ -84,17 +84,18 @@ export const metadata: Metadata = {
     },
   },
 
-  // === Canonical & Alternates ===
   alternates: {
     canonical: 'https://thetechpolitics.com',
   },
 
-  // === Verification (optional - add later) ===
-  // verification: {
-  //   google: 'your-google-site-verification',
-  // },
+  // === Favicon & App Icons ===
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
+// === Structured Data ===
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "WebSite",
@@ -122,37 +123,27 @@ const structuredData = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="google-adsense-account" content="ca-pub-8458799741626167" />
-
-        {/* Core SEO */}
-        <link rel="canonical" href="https://thetechpolitics.com" />
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-        {/* Structured Data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
-
-        {/* Preload Critical Assets */}
-        <link rel="preload" href="/og-china-lead.jpg" as="image" />
-      </head>
-
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-gray-100 min-h-screen`}
       >
         <LayoutWrapper>{children}</LayoutWrapper>
         <Analytics />
+
+        {/* ✅ Structured Data (Safe placement) */}
+        <Script
+          id="structured-data"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+
+        {/* ✅ Optional: Preload critical image */}
+        <link rel="preload" href="/og-china-lead.jpg" as="image" />
       </body>
     </html>
   );
