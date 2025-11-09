@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import Head from 'next/head';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 interface Category {
   _id: string;
@@ -16,257 +16,227 @@ interface ClientLayoutProps {
   categories: Category[];
 }
 
+// Reusable Nav Link
+const NavLink = ({
+  href,
+  children,
+  onClick,
+  className = '',
+}: {
+  href: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+}) => (
+  <Link
+    href={href}
+    onClick={onClick}
+    className={`text-sm font-medium transition-colors hover:text-blue-600 dark:hover:text-blue-400 ${className}`}
+    aria-label={typeof children === 'string' ? `${children} page` : undefined}
+  >
+    {children}
+  </Link>
+);
+
+// Mobile Overlay
+const MobileOverlay = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
+  isOpen ? (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity"
+      onClick={onClose}
+      aria-hidden="true"
+    />
+  ) : null;
+
+// Desktop & Mobile Nav Items
+const navItems = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About Us' },
+  { href: '/blog', label: 'Blog/News' },
+  { href: '/contact', label: 'Contact' },
+  { href: '/privacy-policy', label: 'Privacy Policy' },
+];
+
 export default function ClientLayout({ children, categories }: ClientLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const sidebarRef = useRef<HTMLElement>(null);
 
-  // Handle scroll for header shadow
+  // Close sidebar on route change
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    setSidebarOpen(false);
+  }, [pathname]);
 
-  // Close sidebar on route change or resize
+  // Close on outside click (mobile)
+  const handleOutsideClick = useCallback(
+    (e: MouseEvent) => {
+      if (sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setSidebarOpen(false);
+      }
+    },
+    [sidebarOpen]
+  );
+
   useEffect(() => {
-    const closeSidebar = () => setSidebarOpen(false);
-    window.addEventListener('resize', closeSidebar);
-    return () => window.removeEventListener('resize', closeSidebar);
-  }, []);
+    if (sidebarOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.body.style.overflow = 'hidden'; // Prevent scroll
+    } else {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen, handleOutsideClick]);
+
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <>
-      {/* ✅ Proper Head section */}
-      <Head>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-        />
-        <link rel="icon" href="/favicon.ico" />
-        <title>TechPolitics</title>
-      </Head>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
+      <div className="min-h-screen flex flex-col">
         {/* Sticky Header */}
-        <header
-          className={`sticky top-0 z-50 transition-shadow duration-200 ${
-            scrolled ? 'shadow-lg' : 'shadow'
-          } bg-white dark:bg-neutral-900`}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 sm:h-18">
+        <header className="sticky top-0 z-50 bg-white dark:bg-neutral-900 shadow-md border-b border-gray-200 dark:border-neutral-800">
+          <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" role="navigation" aria-label="Main">
+            <div className="py-4 flex items-center justify-between">
               {/* Logo */}
-              <div className="flex-shrink-0">
-                <Link href="/" className="block" aria-label="TechPolitics - Home">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                    <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                      TechPolitics
-                    </span>
-                  </h1>
+              <h1 className="text-xl sm:text-2xl font-bold flex-shrink-0">
+                <Link href="/" aria-label="TechPolitics Home">
+                  <span className="bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text">
+                    TechPolitics
+                  </span>
                 </Link>
-              </div>
+              </h1>
 
               {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
-                {['Home', 'About Us', 'Blog/News', 'Contact', 'Privacy Policy'].map((item) => {
-                  const href =
-                    item === 'Home'
-                      ? '/'
-                      : item === 'About Us'
-                      ? '/about'
-                      : item === 'Blog/News'
-                      ? '/blog'
-                      : item === 'Contact'
-                      ? '/contact'
-                      : '/privacy-policy';
-
-                  return (
-                    <Link
-                      key={item}
-                      href={href}
-                      className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
-                      aria-label={`${item} Page`}
-                    >
-                      {item}
-                    </Link>
-                  );
-                })}
-              </nav>
+              <div className="hidden md:flex items-center space-x-6">
+                {navItems.map((item) => (
+                  <NavLink key={item.href} href={item.href}>
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
 
               {/* Mobile Menu Button */}
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
+                onClick={toggleSidebar}
+                className="md:hidden p-2 rounded-md text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
                 aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={sidebarOpen}
+                aria-controls="mobile-menu"
               >
-                {sidebarOpen ? <X size={28} /> : <Menu size={28} />}
+                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
-          </div>
 
-          {/* Mobile Slide-In Menu */}
-          <div
-            className={`md:hidden fixed inset-0 z-40 transition-opacity ${
-              sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-            }`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+            {/* Mobile Dropdown Menu */}
             <div
-              className={`absolute left-0 top-0 h-full w-80 max-w-full bg-white dark:bg-neutral-900 shadow-2xl transform transition-transform ${
-                sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+              id="mobile-menu"
+              className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+                sidebarOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
               }`}
-              onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-5 border-b border-gray-200 dark:border-neutral-800">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Menu</h2>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
-                    aria-label="Close menu"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-              </div>
-
-              <nav className="p-4 space-y-1">
-                {[
-                  { label: 'Home', href: '/' },
-                  { label: 'About Us', href: '/about' },
-                  { label: 'Blog/News', href: '/blog' },
-                  { label: 'Contact', href: '/contact' },
-                  { label: 'Privacy Policy', href: '/privacy-policy' },
-                ].map((item) => (
-                  <Link
-                    key={item.label}
+              <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-800">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.href}
                     href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className="block px-3 py-2.5 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-md transition"
+                    onClick={closeSidebar}
+                    className="block px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
                   >
                     {item.label}
-                  </Link>
+                  </NavLink>
                 ))}
-              </nav>
-
-              {/* Categories in Mobile Menu */}
-              {categories.length > 0 && (
-                <div className="border-t border-gray-200 dark:border-neutral-800 px-4 py-3">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                    Categories
-                  </h3>
-                  <div className="space-y-1">
-                    {categories.map(
-                      (cat) =>
-                        cat.slug?.current && (
-                          <Link
-                            key={cat._id}
-                            href={`/category/${cat.slug.current}`}
-                            onClick={() => setSidebarOpen(false)}
-                            className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-md transition"
-                          >
-                            {cat.title}
-                          </Link>
-                        )
-                    )}
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
+          </nav>
         </header>
 
+        {/* Overlay (Mobile Only) */}
+        <MobileOverlay isOpen={sidebarOpen} onClose={closeSidebar} />
+
         {/* Main Content + Sidebar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar */}
             <aside
-              className={`${
-                sidebarOpen
-                  ? 'block fixed inset-0 z-30 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm lg:static lg:block'
-                  : 'hidden lg:block'
-              } lg:w-80 xl:w-72 flex-shrink-0`}
+              ref={sidebarRef}
+              className={`
+                fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white dark:bg-neutral-900 shadow-lg lg:shadow-none
+                transform transition-transform duration-300 ease-in-out lg:transform-none
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                lg:block lg:w-1/4 lg:sticky lg:top-20 lg:self-start
+              `}
+              aria-label="Sidebar"
             >
-              <div className="lg:sticky lg:top-24 space-y-6">
-                {/* Categories Widget */}
-                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Categories
-                    </h3>
-                    <button
-                      onClick={() => setSidebarOpen(false)}
-                      className="lg:hidden text-blue-600 dark:text-blue-400 text-sm font-medium"
-                    >
-                      Close
-                    </button>
-                  </div>
-                  <ul className="space-y-2">
-                    {categories.map(
-                      (cat) =>
-                        cat.slug?.current && (
-                          <li key={cat._id}>
-                            <Link
-                              href={`/category/${cat.slug.current}`}
-                              onClick={() => setSidebarOpen(false)}
-                              className="block py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition"
-                            >
-                              {cat.title}
-                            </Link>
-                          </li>
-                        )
-                    )}
-                  </ul>
+              <div className="h-full overflow-y-auto p-5 space-y-6">
+                {/* Collapse Button (Mobile) */}
+                <div className="flex justify-end lg:hidden">
+                  <button
+                    onClick={closeSidebar}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    aria-label="Collapse sidebar"
+                  >
+                    Collapse
+                  </button>
                 </div>
 
+                {/* Categories */}
+                <section className="bg-white dark:bg-neutral-900 rounded-lg shadow p-5 lg:shadow-none lg:p-0">
+                  <h3 className="text-base font-bold mb-3 text-gray-900 dark:text-gray-100">Categories</h3>
+                  <ul className="space-y-2">
+                    {categories.map((category) =>
+                      category.slug?.current ? (
+                        <li key={category._id}>
+                          <Link
+                            href={`/category/${category.slug.current}`}
+                            onClick={closeSidebar}
+                            className="block text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                            aria-label={`View ${category.title} category`}
+                          >
+                            {category.title}
+                          </Link>
+                        </li>
+                      ) : null
+                    )}
+                  </ul>
+                </section>
+
                 {/* Quick Links */}
-                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-5">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                    Quick Links
-                  </h3>
+                <section className="bg-white dark:bg-neutral-900 rounded-lg shadow p-5 lg:shadow-none lg:p-0">
+                  <h3 className="text-base font-bold mb-3 text-gray-900 dark:text-gray-100">Quick Links</h3>
                   <ul className="space-y-2">
                     <li>
                       <Link
                         href="/"
-                        onClick={() => setSidebarOpen(false)}
-                        className="block py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition"
+                        onClick={closeSidebar}
+                        className="block text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
                       >
-                        Latest Articles
+                        Article Home
                       </Link>
                     </li>
                     <li>
                       <Link
                         href="/contact"
-                        onClick={() => setSidebarOpen(false)}
-                        className="block py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition"
+                        onClick={closeSidebar}
+                        className="block text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
                       >
                         Contact Us
                       </Link>
                     </li>
                   </ul>
-                </div>
+                </section>
               </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 min-w-0">
-              <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 lg:p-8">
-                {children}
-              </div>
+            <main className="flex-1 lg:w-3/4 min-h-[600px]" role="main">
+              {children}
             </main>
           </div>
         </div>
-
-        {/* Mobile Sidebar Toggle */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="lg:hidden fixed bottom-6 right-6 z-40 bg-blue-600 text-white p-4 rounded-full shadow-xl hover:bg-blue-700 transition transform active:scale-95"
-          aria-label="Open sidebar"
-        >
-          <ChevronDown className="rotate-[-90deg]" size={24} />
-        </button>
       </div>
     </>
   );
