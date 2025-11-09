@@ -164,10 +164,10 @@ export default async function HomePage() {
             '@context': 'https://schema.org',
             '@type': 'WebSite',
             name: 'TechPolitics',
-            url: 'https://yourwebsite.com', // Replace with actual URL
+            url: 'https://thetechpolitics.com', // Replace with actual URL
             potentialAction: {
               '@type': 'SearchAction',
-              target: 'https://yourwebsite.com/search?q={search_term_string}',
+              target: 'https://thetechpolitics.com/search?q={search_term_string}',
               'query-input': 'required name=search_term_string',
             },
           }),
