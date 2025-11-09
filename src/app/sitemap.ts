@@ -1,6 +1,6 @@
 // src/app/sitemap.ts
 import { MetadataRoute } from 'next';
-import { client } from '@/lib/sanity';
+import client from '@/lib/sanity'; // ← Fixed: changed from { client } to default import
 
 interface SanitySlug {
   current: string;
@@ -61,7 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogPosts: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `https://thetechpolitics.com/blog/${post.slug.current}`,
     lastModified: new Date(post._updatedAt),
-    changeFrequency: 'weekly',
+    changeFrequency: 'weekly' as const,
     priority: 0.7,
   }));
 
@@ -75,7 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const categoryPages: MetadataRoute.Sitemap = categories.map((cat) => ({
     url: `https://thetechpolitics.com/category/${cat.slug.current}`,
     lastModified: new Date(),
-    changeFrequency: 'weekly',
+    changeFrequency: 'weekly' as const,
     priority: 0.6,
   }));
 
