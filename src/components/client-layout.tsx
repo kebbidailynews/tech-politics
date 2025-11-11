@@ -22,11 +22,13 @@ interface Category {
   title: string;
   slug: string;
 }
+
 interface TrendingPost {
   title: string;
   slug: string;
   views?: number;
 }
+
 interface ClientLayoutProps {
   children: React.ReactNode;
   categories: Category[];
@@ -50,25 +52,25 @@ export default function ClientLayout({
   trending,
   headlines = [],
 }: ClientLayoutProps) {
+  /* ---------- Mobile drawer & collapsible sections ---------- */
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [pagesOpen, setPagesOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
   const [trendOpen, setTrendOpen] = useState(false);
 
+  const [searchOpen, setSearchOpen] = useState(false);
   const [ticker, setTicker] = useState('');
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const pathname = usePathname();
 
-  // close drawers on route change
+  /* ---------- Close drawers on route change ---------- */
   useEffect(() => {
     setSidebarOpen(false);
     setSearchOpen(false);
   }, [pathname]);
 
-  /* ---------- Ticker ---------- */
+  /* ---------- Headline Ticker ---------- */
   useEffect(() => {
     if (!headlines?.length) {
       const update = () => {
@@ -102,7 +104,7 @@ export default function ClientLayout({
     return () => clearInterval(id);
   }, [headlines]);
 
-  /* ---------- USD/NGN ---------- */
+  /* ---------- USD/NGN Rate (FIXED) ---------- */
   useEffect(() => {
     const fetchRate = async () => {
       try {
@@ -111,23 +113,22 @@ export default function ClientLayout({
         const rate = data.rates.NGN?.toFixed(0) ?? '1,650';
         setNgnUsd(`1 USD = ${rate} NGN`);
       } catch {
-        setNgnUsd('1 USD = 1,650 NGN');
+        setNgnUsd(`1 USD = 1,650 NGN`); // ← Fixed: backticks, not quotes
       }
     };
     fetchRate();
-    const id = setInterval(fetchRate, 300_000);
+    const id = setInterval(fetchRate, 300_000); // 5 minutes
     return () => clearInterval(id);
   }, []);
 
-  /* ---------- PWA install ---------- */
+  /* ---------- PWA Install Prompt ---------- */
   useEffect(() => {
     const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handler as EventListener);
-    return () =>
-      window.removeEventListener('beforeinstallprompt', handler as EventListener);
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
   const handleInstall = () => {
@@ -162,11 +163,11 @@ export default function ClientLayout({
         </div>
       </div>
 
-      {/* Header – always visible */}
+      {/* Header – Sticky */}
       <header className="sticky top-0 z-50 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Site title */}
+            {/* Site Title */}
             <Link
               href="/"
               className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent"
@@ -174,7 +175,7 @@ export default function ClientLayout({
               TechPolitics
             </Link>
 
-            {/* Desktop nav */}
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
               {[
                 { label: 'Home', href: '/' },
@@ -191,26 +192,22 @@ export default function ClientLayout({
                   {item.label}
                 </Link>
               ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchOpen(true)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSearchOpen(true)}>
                 <Search className="w-4 h-4" />
               </Button>
             </nav>
 
-            {/* Mobile menu button */}
+            {/* Mobile Menu Button – Collapsible */}
             <button
-              onClick={() => setSidebarOpen(true)}
+              onClick={() => setSidebarOpen((prev) => !prev)}
               className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
             >
-              <Menu className="w-6 h-6" />
+              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* Search overlay */}
+        {/* Search Overlay */}
         {searchOpen && (
           <div className="fixed inset-0 z-50 bg-white dark:bg-neutral-900 flex items-center justify-center p-6">
             <div className="w-full max-w-2xl">
@@ -225,24 +222,21 @@ export default function ClientLayout({
                 </Button>
               </div>
             </div>
-            <button
-              onClick={() => setSearchOpen(false)}
-              className="absolute top-6 right-6"
-            >
+            <button onClick={() => setSearchOpen(false)} className="absolute top-6 right-6">
               <X className="w-6 h-6" />
             </button>
           </div>
         )}
       </header>
 
-      {/* Mobile drawer – collapsible sections */}
+      {/* Mobile Drawer – Collapsible */}
       {sidebarOpen && (
         <>
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="fixed left-0 top-0 h-full w-80 bg-white dark:bg-neutral-900 shadow-2xl z-50 overflow-y-auto">
+          <aside className="fixed left-0 top-0 h-full w-80 bg-white dark:bg-neutral-900 shadow-2xl z-50 overflow-y-auto transition-transform duration-300">
             <div className="p-5 border-b flex items-center justify-between">
               <span className="text-xl font-bold text-red-600">Menu</span>
               <button onClick={() => setSidebarOpen(false)}>
@@ -258,11 +252,7 @@ export default function ClientLayout({
                   className="flex w-full items-center justify-between font-bold text-sm uppercase text-gray-600 dark:text-gray-400 mb-2"
                 >
                   Pages
-                  {pagesOpen ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  {pagesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {pagesOpen && (
                   <div className="space-y-1">
@@ -292,11 +282,7 @@ export default function ClientLayout({
                   className="flex w-full items-center justify-between font-bold text-sm uppercase text-gray-600 dark:text-gray-400 mb-2"
                 >
                   Categories
-                  {catsOpen ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  {catsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {catsOpen && (
                   <div className="space-y-1">
@@ -321,11 +307,7 @@ export default function ClientLayout({
                   className="flex w-full items-center justify-between font-bold text-sm uppercase text-gray-600 dark:text-gray-400 mb-2"
                 >
                   Trending
-                  {trendOpen ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  {trendOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {trendOpen && (
                   <ol className="space-y-2 text-sm">
@@ -349,9 +331,9 @@ export default function ClientLayout({
         </>
       )}
 
-      {/* Main content – desktop sidebar hidden on mobile */}
+      {/* Main Content */}
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        {/* Desktop-only sidebar */}
+        {/* Desktop Sidebar – Hidden on Mobile */}
         <aside className="hidden lg:block lg:w-64 space-y-6">
           <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
             <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3">
@@ -376,10 +358,7 @@ export default function ClientLayout({
               {trending.map((post, i) => (
                 <li key={post.slug} className="flex gap-2">
                   <span className="font-bold text-red-600">{i + 1}</span>
-                  <Link
-                    href={`/post/${post.slug}`}
-                    className="hover:text-red-600 line-clamp-2"
-                  >
+                  <Link href={`/post/${post.slug}`} className="hover:text-red-600 line-clamp-2">
                     {post.title}
                   </Link>
                 </li>
@@ -388,7 +367,7 @@ export default function ClientLayout({
           </div>
         </aside>
 
-        {/* Page body */}
+        {/* Page Body */}
         <main className="flex-1">{children}</main>
       </div>
 
@@ -396,15 +375,10 @@ export default function ClientLayout({
       <footer className="bg-neutral-900 text-white py-12">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link
-              href="/"
-              className="text-2xl font-black text-red-600 mb-3 inline-block"
-            >
+            <Link href="/" className="text-2xl font-black text-red-600 mb-3 inline-block">
               TechPolitics
             </Link>
-            <p className="text-sm text-gray-400">
-              The world’s #1 source on tech geopolitics.
-            </p>
+            <p className="text-sm text-gray-400">The world’s #1 source on tech geopolitics.</p>
             <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {new Date().toLocaleTimeString('en-NG', {
@@ -433,21 +407,9 @@ export default function ClientLayout({
           <div>
             <h4 className="font-bold mb-3">Company</h4>
             <ul className="space-y-1 text-sm text-gray-400">
-              <li>
-                <Link href="/about" className="hover:text-red-500">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-red-500">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy-policy" className="hover:text-red-500">
-                  Privacy
-                </Link>
-              </li>
+              <li><Link href="/about" className="hover:text-red-500">About</Link></li>
+              <li><Link href="/contact" className="hover:text-red-500">Contact</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-red-500">Privacy</Link></li>
             </ul>
           </div>
 
@@ -457,10 +419,7 @@ export default function ClientLayout({
               <Link href="https://twitter.com/TechPolitics" className="hover:text-red-500">
                 Twitter
               </Link>
-              <Link
-                href="https://linkedin.com/company/techpolitics"
-                className="hover:text-red-500"
-              >
+              <Link href="https://linkedin.com/company/techpolitics" className="hover:text-red-500">
                 LinkedIn
               </Link>
             </div>
@@ -472,7 +431,7 @@ export default function ClientLayout({
         </div>
       </footer>
 
-      {/* Marquee animation */}
+      {/* Marquee Animation */}
       <style jsx>{`
         @keyframes marquee {
           0% {

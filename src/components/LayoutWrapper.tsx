@@ -64,9 +64,13 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
   } catch (error) {
     console.error('Error fetching layout data:', error);
 
-    // Fallback to empty arrays
+    // Fallback: empty arrays for all props
     return (
-      <ClientLayout categories={[]} trending={[]} headlines={[]}>
+      <ClientLayout
+        categories={[]}
+        trending={[]}   // ← This was missing before
+        headlines={[]}
+      >
         {children}
       </ClientLayout>
     );
