@@ -225,34 +225,35 @@ export default function ClientLayout({ children, categories, trending, headlines
       )}
 
       {/* Main content */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <aside className="lg:w-64 space-y-6">
-          <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
-            <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3">Categories</h3>
-            <ul className="space-y-2">
-              {categories.map(cat => (
-                <li key={cat._id}>
-                  <Link href={cat.slug} className="block text-sm hover:text-red-600">{cat.title}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
-            <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" /> Trending
-            </h3>
-            <ol className="space-y-2 text-sm">
-              {trending.map((post, i) => (
-                <li key={post.slug} className="flex gap-2">
-                  <span className="font-bold text-red-600">{i + 1}</span>
-                  <Link href={`/post/${post.slug}`} className="hover:text-red-600 line-clamp-2">{post.title}</Link>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </aside>
-        <main className="flex-1">{children}</main>
-      </div>
+<div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+  {/* ← ADD hidden + lg:block → */}
+  <aside className="hidden lg:block lg:w-64 space-y-6">
+    <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
+      <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3">Categories</h3>
+      <ul className="space-y-2">
+        {categories.map(cat => (
+          <li key={cat._id}>
+            <Link href={cat.slug} className="block text-sm hover:text-red-600">{cat.title}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
+      <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+        <TrendingUp className="w-5 h-5" /> Trending
+      </h3>
+      <ol className="space-y-2 text-sm">
+        {trending.map((post, i) => (
+          <li key={post.slug} className="flex gap-2">
+            <span className="font-bold text-red-600">{i + 1}</span>
+            <Link href={`/post/${post.slug}`} className="hover:text-red-600 line-clamp-2">{post.title}</Link>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </aside>
+  <main className="flex-1">{children}</main>
+</div>
 
       {/* Footer */}
       <footer className="bg-neutral-900 text-white py-12">
