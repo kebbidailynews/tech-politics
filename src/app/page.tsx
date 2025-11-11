@@ -1,178 +1,243 @@
 // src/app/page.tsx
-import client from '@/lib/sanity';
-import { urlFor } from '@/lib/sanity';
-import Image from 'next/image';
 import Link from 'next/link';
-
-interface SanityImage {
-  _type: string;
-  asset: {
-    _ref: string;
-    _type: string;
-  };
-}
+import Image from 'next/image';
+import { Clock, TrendingUp, ChevronRight } from 'lucide-react';
+import { Suspense } from 'react';
+import client  from '@/lib/sanity';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface Post {
   _id: string;
   title: string;
-  slug: { current: string };
-  mainImage: SanityImage | null;
-  body: unknown;
+  slug: string;
+  excerpt: string;
   publishedAt: string;
+  mainImage?: { asset: { url: string } };
+  category?: { title: string; slug: string };
+  readingTime?: number;
+  views?: number;
 }
 
+// ── Server Component: Fetch Data ──
+async function getHomeData() {
+  const posts = await client.fetch<Post[]>(
+    `*[_type == "post"] | order(publishedAt desc) {
+      _id,
+      title,
+      "slug": slug.current,
+      excerpt,
+      publishedAt,
+      mainImage { asset-> { url } },
+      "category": category-> { title, "slug": slug.current },
+      readingTime,
+      views
+    }`
+  );
+
+  const hero = posts[0];
+  const featured = posts.slice(1, 4);
+  const trending = posts.sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+  const latest = posts.slice(4, 10);
+
+  return { hero, featured, trending, latest };
+}
+
+// ── Hero Card Component ──
+function HeroPost({ post }: { post: Post }) {
+  const time = new Date(post.publishedAt).toLocaleString('en-NG', {
+    timeZone: 'Africa/Lagos',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  return (
+    <div className="relative group overflow-hidden rounded-xl shadow-2xl">
+      {post.mainImage ? (
+        <Image
+          src={post.mainImage.asset.url}
+          alt={post.title}
+          width={1200}
+          height={600}
+          className="w-full h-96 object-cover transition-transform group-hover:scale-105"
+        />
+      ) : (
+        <div className="bg-gradient-to-br from-red-600 to-orange-600 h-96 flex items-center justify-center">
+          <span className="text-white text-4xl font-black">TP</span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+        {post.category && (
+          <Badge className="mb-2 bg-red-600">{post.category.title}</Badge>
+        )}
+        <h1 className="text-3xl md:text-5xl font-black leading-tight">
+          <Link href={`/post/${post.slug}`} className="hover:underline">
+            {post.title}
+          </Link>
+        </h1>
+        <p className="mt-2 text-sm opacity-90 line-clamp-2">{post.excerpt}</p>
+        <div className="mt-3 flex items-center gap-3 text-xs">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" /> {time} WAT
+          </span>
+          {post.readingTime && <span>• {post.readingTime} min read</span>}
+          {post.views && <span>• {post.views.toLocaleString()} views</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Featured Grid ──
+function FeaturedGrid({ posts }: { posts: Post[] }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {posts.map((post) => (
+        <Card key={post._id} className="overflow-hidden hover:shadow-xl transition">
+          {post.mainImage ? (
+            <Image
+              src={post.mainImage.asset.url}
+              alt={post.title}
+              width={400}
+              height={250}
+              className="w-full h-48 object-cover"
+            />
+          ) : (
+            <div className="bg-gray-200 h-48" />
+          )}
+          <CardHeader>
+            {post.category && (
+              <Badge variant="secondary" className="w-fit">
+                {post.category.title}
+              </Badge>
+            )}
+            <CardTitle className="line-clamp-2">
+              <Link href={`/post/${post.slug}`} className="hover:text-red-600">
+                {post.title}
+              </Link>
+            </CardTitle>
+            <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Clock className="w-3 h-3" />
+              {new Date(post.publishedAt).toLocaleDateString('en-NG', {
+                timeZone: 'Africa/Lagos',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ── Trending Sidebar ──
+function TrendingSidebar({ posts }: { posts: Post[] }) {
+  return (
+    <div className="bg-gray-50 dark:bg-neutral-800 rounded-xl p-6">
+      <h2 className="flex items-center gap-2 text-xl font-black text-red-600 mb-4">
+        <TrendingUp className="w-6 h-6" /> Trending in Nigeria
+      </h2>
+      <ol className="space-y-3">
+        {posts.map((post, i) => (
+          <li key={post._id} className="flex gap-3 group">
+            <span className="font-black text-2xl text-red-600 w-8">{i + 1}</span>
+            <div>
+              <Link
+                href={`/post/${post.slug}`}
+                className="font-medium hover:text-red-600 transition line-clamp-2"
+              >
+                {post.title}
+              </Link>
+              <p className="text-xs text-gray-500 mt-1">
+                {post.views?.toLocaleString()} views
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+// ── Main Homepage ──
 export default async function HomePage() {
-  let posts: Post[] = [];
-  let error: string | null = null;
-
-  try {
-    const query = `*[_type == "post"] | order(publishedAt desc){
-      _id, title, slug, mainImage, body, publishedAt
-    }`;
-    posts = await client.fetch(query);
-  } catch (err) {
-    console.error('Sanity fetch error:', err);
-    error = 'Failed to load posts. Please try again later.';
-  }
-
-  const [featured, ...latest] = posts.length > 0 ? posts : [];
+  const { hero, featured, trending, latest } = await getHomeData();
 
   return (
     <>
-      {/* Error Message */}
-      {error && (
-        <div className="text-center text-red-600 dark:text-red-400 py-4">
-          {error}
-        </div>
-      )}
-
-      {/* Featured Story */}
-      {featured ? (
-        <section className="mb-10">
-          <Link
-            href={`/post/${featured.slug.current}`}
-            aria-label={`Read full article: ${featured.title}`}
-          >
-            <article className="rounded-lg bg-white dark:bg-neutral-900 shadow-md hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row gap-4 p-4">
-              {featured.mainImage && (
-                <div className="relative w-full sm:w-1/3 h-32 sm:h-40">
-                  <Image
-                    src={urlFor(featured.mainImage).width(400).height(300).url()}
-                    alt={featured.title}
-                    fill
-                    className="object-cover rounded-md"
-                    priority
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase mb-1">
-                  Featured Story
-                </p>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                  {featured.title}
-                </h2>
-              </div>
-            </article>
-          </Link>
-        </section>
-      ) : (
-        !error && (
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            No featured post available
-          </p>
-        )
-      )}
-
-      {/* Latest Posts */}
-      {latest.length > 0 ? (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {latest.map((post) => (
-            <Link
-              href={`/post/${post.slug.current}`}
-              key={post._id}
-              aria-label={`Read full article: ${post.title}`}
-            >
-              <article className="rounded-lg bg-white dark:bg-neutral-900 shadow hover:shadow-md transition-all duration-300">
-                {post.mainImage && (
-                  <div className="relative w-full h-32">
-                    <Image
-                      src={urlFor(post.mainImage).width(400).height(300).url()}
-                      alt={post.title}
-                      fill
-                      className="object-cover rounded-t-lg"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-                <div className="p-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                    {post.title}
-                  </h3>
-                </div>
-              </article>
-            </Link>
-          ))}
-        </section>
-      ) : (
-        !error && (
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            No posts available
-          </p>
-        )
-      )}
-
-      {/* Newsletter CTA */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 mt-10 rounded-lg p-6 sm:p-8 text-center text-white">
-        <h3 className="text-xl sm:text-2xl font-bold mb-2">
-          Join the TechPolitics Community
-        </h3>
-        <p className="text-sm sm:text-base text-blue-100 mb-4 max-w-xl mx-auto">
-          Stay updated with 5,000 readers on AI governance, tech regulation, and global
-          innovation trends.
-        </p>
-
-        {/* ✅ Formspree subscription form */}
-        <form
-          action="https://formspree.io/f/mdkdgrvd" // Your Formspree endpoint
-          method="POST"
-          className="max-w-sm mx-auto flex flex-col sm:flex-row gap-3"
-        >
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            className="w-full px-4 py-2 rounded-md bg-white/90 dark:bg-neutral-800 text-gray-800 dark:text-gray-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-500 transition"
-            required
-            aria-label="Email address for newsletter subscription"
-          />
-          <button
-            type="submit"
-            className="px-5 py-2 bg-white text-blue-600 rounded-md font-medium hover:bg-blue-100 dark:bg-neutral-900 dark:text-blue-300 dark:hover:bg-neutral-800 transition"
-          >
-            Subscribe
-          </button>
-        </form>
+      {/* === HERO SECTION === */}
+      <section className="mb-12">
+        {hero ? <HeroPost post={hero} /> : <div className="h-96 bg-gray-200 rounded-xl" />}
       </section>
 
-      {/* Structured Data for SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: 'TechPolitics',
-            url: 'https://thetechpolitics.com', // Replace with actual URL
-            potentialAction: {
-              '@type': 'SearchAction',
-              target: 'https://thetechpolitics.com/search?q={search_term_string}',
-              'query-input': 'required name=search_term_string',
-            },
-          }),
-        }}
-      />
+      {/* === LIVE TIME BANNER (NIGERIA) === */}
+      <div className="bg-red-600 text-white py-2 text-center font-bold text-sm">
+        <Clock className="inline w-4 h-4 mr-1" />
+        LIVE: {new Date().toLocaleTimeString('en-NG', {
+          timeZone: 'Africa/Lagos',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        })} WAT • Tuesday, November 11, 2025
+      </div>
+
+      {/* === FEATURED GRID + TRENDING === */}
+      <section className="my-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-3">
+          <h2 className="text-2xl font-black mb-6 flex items-center gap-2">
+            Featured Stories <ChevronRight className="w-5 h-5 text-red-600" />
+          </h2>
+          <FeaturedGrid posts={featured} />
+        </div>
+        <div className="lg:col-span-1">
+          <Suspense fallback={<div>Loading trending...</div>}>
+            <TrendingSidebar posts={trending} />
+          </Suspense>
+        </div>
+      </section>
+
+      {/* === LATEST NEWS === */}
+      <section className="my-12">
+        <h2 className="text-2xl font-black mb-6">Latest Updates</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {latest.map((post) => (
+            <Card key={post._id} className="hover:shadow-lg transition">
+              <CardHeader>
+                <CardTitle className="text-lg line-clamp-2">
+                  <Link href={`/post/${post.slug}`} className="hover:text-red-600">
+                    {post.title}
+                  </Link>
+                </CardTitle>
+                <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>
+                    {new Date(post.publishedAt).toLocaleDateString('en-NG', {
+                      timeZone: 'Africa/Lagos',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                  {post.readingTime && <span>{post.readingTime} min</span>}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <Button asChild size="lg" className="bg-red-600 hover:bg-red-700">
+            <Link href="/blog">View All Articles</Link>
+          </Button>
+        </div>
+      </section>
     </>
   );
 }

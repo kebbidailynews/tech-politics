@@ -1,102 +1,28 @@
-/* ---------------------------------------
-   ✅ Tailwind Directives
---------------------------------------- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ---------------------------------------
-   🎨 CSS Custom Properties
---------------------------------------- */
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  /* Geist font families */
-  --font-geist-sans: 'Geist', sans-serif;
-  --font-geist-mono: 'Geist Mono', monospace;
-}
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
 
-/* Dark mode variables */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-/* ---------------------------------------
-   🌐 Global Elements
---------------------------------------- */
 @layer base {
-  html {
-    scroll-behavior: smooth; /* Smooth scrolling */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
   }
 
-  body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-geist-sans);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
   }
 }
 
-/* ---------------------------------------
-   🧭 Navigation Tweaks
---------------------------------------- */
 @layer components {
-  nav {
-    display: block !important;
+  .prose {
+    @apply max-w-none text-gray-700 dark:text-gray-300;
   }
-
-  nav h1 {
-    display: block !important;
-    visibility: visible !important;
-    line-height: 1.2; /* Avoid clipping */
-  }
-
-  /* Fallback for browsers that don't support bg-clip-text */
-  @supports not (-webkit-background-clip: text) {
-    nav h1 span {
-      color: #2563eb; /* Blue-600 fallback */
-      background: none;
-    }
-  }
-
-  /* CNN-inspired utilities */
-  .breaking-badge {
-    @apply inline-block bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-full;
-  }
-
-  .news-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
-  }
-
-  .hero-overlay {
-    @apply absolute inset-0 bg-gradient-to-b from-black/10 to-black/60;
-  }
-}
-
-/* ---------------------------------------
-   📱 Mobile Responsiveness
---------------------------------------- */
-@media (max-width: 768px) {
-  nav {
-    display: flex !important;
-    align-items: center;
-  }
-
-  nav h1 {
-    display: block !important;
-    visibility: visible !important;
-    font-size: 1.25rem; /* Slightly smaller for mobile */
-    flex-grow: 1;
-  }
-
-  /* Mobile-optimized news cards */
-  .news-card-mobile {
-    @apply rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow;
+  .prose h2 {
+    @apply text-2xl font-bold mt-8 mb-4;
   }
 }
