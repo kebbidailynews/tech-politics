@@ -7,6 +7,7 @@ import {
   Clock,
   DollarSign,
   Download,
+  X, // ← ADD THIS LINE
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
