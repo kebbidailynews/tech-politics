@@ -2,8 +2,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Menu,
-  X,
   Search,
   TrendingUp,
   Clock,
@@ -20,11 +18,13 @@ interface Category {
   title: string;
   slug: string;
 }
+
 interface TrendingPost {
   title: string;
   slug: string;
   views?: number;
 }
+
 interface ClientLayoutProps {
   children: React.ReactNode;
   categories: Category[];
@@ -48,7 +48,6 @@ export default function ClientLayout({
   trending,
   headlines = [],
 }: ClientLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [ticker, setTicker] = useState('');
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
@@ -56,9 +55,8 @@ export default function ClientLayout({
     useState<BeforeInstallPromptEvent | null>(null);
   const pathname = usePathname();
 
-  // Close menus on route change
+  // Close search on route change
   useEffect(() => {
-    setSidebarOpen(false);
     setSearchOpen(false);
   }, [pathname]);
 
@@ -71,17 +69,14 @@ export default function ClientLayout({
         minute: '2-digit',
         hour12: true,
       });
-
       if (!headlines || headlines.length === 0) {
         setTicker(`${wat} WAT — Breaking tech news`);
         return;
       }
-
       const i = Math.floor(Date.now() / 10000) % headlines.length;
       const headline = headlines[i] ?? 'Breaking tech news';
       setTicker(`${wat} WAT — ${headline}`);
     };
-
     update();
     const id = setInterval(update, 10000);
     return () => clearInterval(id);
@@ -160,7 +155,6 @@ export default function ClientLayout({
       <header className="sticky top-0 z-50 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-
             {/* Title – always visible */}
             <Link
               href="/"
@@ -200,13 +194,15 @@ export default function ClientLayout({
               </Button>
             </nav>
 
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
+            {/* Mobile: only search button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setSearchOpen(true)}
             >
-              <Menu className="w-6 h-6" />
-            </button>
+              <Search className="w-5 h-5" />
+            </Button>
           </div>
         </div>
 
@@ -220,10 +216,7 @@ export default function ClientLayout({
                   className="text-lg h-14"
                   autoFocus
                 />
-                <Button
-                  size="lg"
-                  className="bg-red-600 hover:bg-red-700"
-                >
+                <Button size="lg" className="bg-red-600 hover:bg-red-700">
                   Search
                 </Button>
               </div>
@@ -237,76 +230,6 @@ export default function ClientLayout({
           </div>
         )}
       </header>
-
-      {/* ──────── Mobile drawer (single collapsible menu) ──────── */}
-      {sidebarOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <aside className="fixed left-0 top-0 h-full w-80 bg-white dark:bg-neutral-900 shadow-2xl z-50 overflow-y-auto">
-            <div className="p-5 border-b flex items-center justify-between">
-              <span className="text-xl font-bold text-red-600">
-                Menu
-              </span>
-              <button onClick={() => setSidebarOpen(false)}>
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <nav className="p-5 space-y-4 text-lg">
-              {/* Home + dynamic categories */}
-              {[
-                { label: 'Home', href: '/' },
-                ...categories.map((cat) => ({
-                  label: cat.title,
-                  href: cat.slug,
-                })),
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block py-2 font-medium hover:text-red-600"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              {/* Search inside drawer */}
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => {
-                  setSearchOpen(true);
-                  setSidebarOpen(false);
-                }}
-              >
-                <Search className="w-5 h-5 mr-2" />
-                Search
-              </Button>
-
-              {/* Extra static pages */}
-              {[
-                { label: 'About Us', href: '/about' },
-                { label: 'Blog/News', href: '/blog' },
-                { label: 'Contact', href: '/contact' },
-                { label: 'Privacy Policy', href: '/privacy-policy' },
-              ].map((i) => (
-                <Link
-                  key={i.href}
-                  href={i.href}
-                  className="block py-2 font-medium hover:text-red-600"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  {i.label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
-        </>
-      )}
 
       {/* ──────── Main content (unchanged) ──────── */}
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
@@ -328,7 +251,6 @@ export default function ClientLayout({
               ))}
             </ul>
           </div>
-
           <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
             <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" /> Trending
@@ -350,7 +272,6 @@ export default function ClientLayout({
             </ol>
           </div>
         </aside>
-
         <main className="flex-1">{children}</main>
       </div>
 
@@ -378,7 +299,6 @@ export default function ClientLayout({
               WAT • Nigeria
             </p>
           </div>
-
           <div>
             <h4 className="font-bold mb-3">Sections</h4>
             <ul className="space-y-1 text-sm text-gray-400">
@@ -394,7 +314,6 @@ export default function ClientLayout({
               ))}
             </ul>
           </div>
-
           <div>
             <h4 className="font-bold mb-3">Company</h4>
             <ul className="space-y-1 text-sm text-gray-400">
@@ -418,7 +337,6 @@ export default function ClientLayout({
               </li>
             </ul>
           </div>
-
           <div>
             <h4 className="font-bold mb-3">Follow</h4>
             <div className="flex gap-4 text-sm">
@@ -437,7 +355,6 @@ export default function ClientLayout({
             </div>
           </div>
         </div>
-
         <div className="text-center text-xs text-gray-500 mt-8 border-t border-neutral-800 pt-6">
           © 2025 TechPolitics. All rights reserved.
         </div>
