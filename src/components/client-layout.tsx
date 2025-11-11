@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 interface Category {
   _id: string;
   title: string;
-  slug: string; // already /category/slug
+  slug: string;
 }
 
 interface TrendingPost {
@@ -27,12 +27,22 @@ interface ClientLayoutProps {
   headlines: string[];
 }
 
+// Proper PWA type
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
 export default function ClientLayout({ children, categories, trending, headlines = [] }: ClientLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [ticker, setTicker] = useState('');
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -91,14 +101,14 @@ export default function ClientLayout({ children, categories, trending, headlines
     return () => clearInterval(id);
   }, []);
 
-  // --- PWA install prompt ---
+  // --- PWA install prompt (NO ANY) ---
   useEffect(() => {
-    const handler = (e: any) => {
+    const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
   const handleInstall = () => {
@@ -137,7 +147,6 @@ export default function ClientLayout({ children, categories, trending, headlines
             <Link href="/" className="text-3xl font-black tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
               TechPolitics
             </Link>
-
             <nav className="hidden lg:flex items-center space-x-1">
               {[
                 { label: 'Home', href: '/' },
@@ -158,13 +167,11 @@ export default function ClientLayout({ children, categories, trending, headlines
                 <Search className="w-4 h-4" />
               </Button>
             </nav>
-
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800">
               <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
-
         {/* Search overlay */}
         {searchOpen && (
           <div className="fixed inset-0 z-50 bg-white dark:bg-neutral-900 flex items-center justify-center p-6">
@@ -204,7 +211,6 @@ export default function ClientLayout({ children, categories, trending, headlines
                   </Link>
                 ))}
               </div>
-
               <div>
                 <h3 className="font-bold text-sm uppercase text-gray-600 dark:text-gray-400 mb-3">Categories</h3>
                 {categories.map(cat => (
@@ -221,7 +227,6 @@ export default function ClientLayout({ children, categories, trending, headlines
       {/* Main content */}
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
         <aside className="lg:w-64 space-y-6">
-          {/* Sidebar categories */}
           <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
             <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3">Categories</h3>
             <ul className="space-y-2">
@@ -232,8 +237,6 @@ export default function ClientLayout({ children, categories, trending, headlines
               ))}
             </ul>
           </div>
-
-          {/* Trending posts */}
           <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
             <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" /> Trending
@@ -248,7 +251,6 @@ export default function ClientLayout({ children, categories, trending, headlines
             </ol>
           </div>
         </aside>
-
         <main className="flex-1">{children}</main>
       </div>
 
