@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -25,38 +24,32 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTheme } from 'next-themes';
-
 interface Category {
   _id: string;
   title: string;
   slug: string;
 }
-
 interface TrendingPost {
   title: string;
   slug: string;
   views?: number;
 }
-
 interface ClientLayoutProps {
   children: React.ReactNode;
   categories: Category[];
   trending: TrendingPost[];
   headlines: string[];
 }
-
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
   prompt(): Promise<void>;
 }
-
 // Memoized Ticker Item
 const TickerItem = memo(({ children }: { children: React.ReactNode }) => (
   <span className="inline-block px-3 sm:px-4">{children}</span>
 ));
 TickerItem.displayName = 'TickerItem';
-
 export default function ClientLayout({
   children,
   categories,
@@ -69,21 +62,17 @@ export default function ClientLayout({
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [mounted, setMounted] = useState(false);
-
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const prefersReducedMotion = useReducedMotion();
-
   // Mount effect
   useEffect(() => setMounted(true), []);
-
   // Close overlays on route change
   useEffect(() => {
     setSearchOpen(false);
     setMobileMenuOpen(false);
   }, [pathname]);
-
   // Keyboard shortcuts
   useHotkeys('cmd+k, ctrl+k', (e) => {
     e.preventDefault();
@@ -93,7 +82,6 @@ export default function ClientLayout({
     setSearchOpen(false);
     setMobileMenuOpen(false);
   });
-
   /* ──────── Headline Ticker ──────── */
   useEffect(() => {
     const updateTicker = () => {
@@ -103,21 +91,17 @@ export default function ClientLayout({
         minute: '2-digit',
         hour12: true,
       });
-
       if (!headlines.length) {
         setTicker(`${time} WAT — Breaking tech news`);
         return;
       }
-
       const index = Math.floor(Date.now() / 10000) % headlines.length;
       setTicker(`${time} WAT — ${headlines[index]}`);
     };
-
     updateTicker();
     const id = setInterval(updateTicker, 10000);
     return () => clearInterval(id);
   }, [headlines]);
-
   /* ──────── NGN/USD Rate (Cached) ──────── */
   useEffect(() => {
     const fetchRate = async () => {
@@ -125,19 +109,16 @@ export default function ClientLayout({
         const cached = localStorage.getItem('ngn-usd-rate');
         const cachedTime = localStorage.getItem('ngn-usd-time');
         const now = Date.now();
-
         if (cached && cachedTime && now - Number(cachedTime) < 300_000) {
           setNgnUsd(cached);
           return;
         }
-
         const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
           next: { revalidate: 300 },
         });
         const data = await res.json();
         const rate = data.rates.NGN?.toFixed(0) ?? '1,650';
         const value = `1 USD = ${rate} NGN`;
-
         localStorage.setItem('ngn-usd-rate', value);
         localStorage.setItem('ngn-usd-time', now.toString());
         setNgnUsd(value);
@@ -145,12 +126,10 @@ export default function ClientLayout({
         setNgnUsd('1 USD = 1,650 NGN');
       }
     };
-
     fetchRate();
     const id = setInterval(fetchRate, 300_000);
     return () => clearInterval(id);
   }, []);
-
   /* ──────── PWA Install Prompt ──────── */
   useEffect(() => {
     const handler = (e: BeforeInstallPromptEvent) => {
@@ -160,13 +139,11 @@ export default function ClientLayout({
     window.addEventListener('beforeinstallprompt', handler as EventListener);
     return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
-
   const handleInstall = useCallback(() => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
   }, [deferredPrompt]);
-
   // Memoized nav items
   const navItems = useMemo(
     () => [
@@ -175,7 +152,6 @@ export default function ClientLayout({
     ],
     [categories]
   );
-
   // FULLY TYPE-SAFE MARQUEE ANIMATION
   const marqueeAnimation = {
     x: [1000, -1000],
@@ -186,21 +162,19 @@ export default function ClientLayout({
       ease: 'linear' as const,
     },
   };
-
   return (
     <>
       {/* SEO & Meta */}
       <meta name="theme-color" content="#dc2626" />
       <link rel="manifest" href="/manifest.json" />
-
       {/* Ticker Bar */}
       <div className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden relative">
         <motion.div
           className="inline-block whitespace-nowrap"
           animate={!prefersReducedMotion ? marqueeAnimation : {}}
           style={{ display: 'inline-block' }}
-          onTapStart={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
-          onTapEnd={(e) => (e.currentTarget.style.animationPlayState = 'running')}
+          onTapStart={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = 'paused'; }}
+          onTapEnd={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = 'running'; }}
         >
           <TickerItem>
             <Link href="/live" className="hover:underline inline-flex items-center gap-1">
@@ -230,7 +204,6 @@ export default function ClientLayout({
           )}
         </motion.div>
       </div>
-
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 dark:bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-gray-200 dark:border-neutral-800">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -242,7 +215,6 @@ export default function ClientLayout({
             >
               TechPolitics
             </Link>
-
             {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-1">
               {navItems.map((item) => (
@@ -281,7 +253,6 @@ export default function ClientLayout({
                 </Button>
               )}
             </nav>
-
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
@@ -295,7 +266,6 @@ export default function ClientLayout({
           </div>
         </div>
       </header>
-
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur border-t border-gray-200 dark:border-neutral-800">
         <div className="flex justify-around items-center h-16">
@@ -323,7 +293,6 @@ export default function ClientLayout({
           })}
         </div>
       </nav>
-
       {/* Mobile Menu Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
@@ -342,7 +311,6 @@ export default function ClientLayout({
                 </Button>
               </div>
             </div>
-
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
               <nav className="space-y-1">
                 {navItems.map((item) => (
@@ -362,7 +330,6 @@ export default function ClientLayout({
                   </Link>
                 ))}
               </nav>
-
               <div>
                 <h3 className="flex items-center gap-2 font-bold text-red-600 text-sm uppercase tracking-wider mb-3">
                   <TrendingUp className="w-5 h-5" /> Trending Now
@@ -392,7 +359,6 @@ export default function ClientLayout({
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Search Modal */}
       <AnimatePresence>
         {searchOpen && (
@@ -435,7 +401,6 @@ export default function ClientLayout({
                   Search
                 </Button>
               </form>
-
               <div className="mt-6 flex flex-wrap gap-2 text-sm text-gray-500">
                 <span className="font-medium">Try:</span>
                 {['AI Ethics', 'Tech in Africa', 'China Chip Ban', 'Starlink Nigeria'].map((s) => (
@@ -452,7 +417,6 @@ export default function ClientLayout({
                 ))}
               </div>
             </motion.div>
-
             <button
               onClick={() => setSearchOpen(false)}
               className="absolute top-6 right-6 p-3 rounded-full bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition"
@@ -463,7 +427,6 @@ export default function ClientLayout({
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Main Content */}
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 lg:pb-8">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -486,7 +449,6 @@ export default function ClientLayout({
                 ))}
               </ul>
             </div>
-
             <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl p-5">
               <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" /> Trending
@@ -506,12 +468,10 @@ export default function ClientLayout({
               </ol>
             </div>
           </aside>
-
           {/* Page Content */}
           <article className="flex-1">{children}</article>
         </div>
       </main>
-
       {/* Footer */}
       <footer className="bg-neutral-900 text-white mt-16">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -535,7 +495,6 @@ export default function ClientLayout({
                 WAT
               </p>
             </div>
-
             <div>
               <h4 className="font-bold mb-3 text-sm uppercase tracking-wider">Sections</h4>
               <ul className="space-y-2 text-sm text-gray-400">
@@ -548,7 +507,6 @@ export default function ClientLayout({
                 ))}
               </ul>
             </div>
-
             <div>
               <h4 className="font-bold mb-3 text-sm uppercase tracking-wider">Company</h4>
               <ul className="space-y-2 text-sm text-gray-400">
@@ -557,7 +515,6 @@ export default function ClientLayout({
                 <li><Link href="/privacy" className="hover:text-red-500">Privacy</Link></li>
               </ul>
             </div>
-
             <div className="col-span-2 md:col-span-1">
               <h4 className="font-bold mb-3 text-sm uppercase tracking-wider">Follow</h4>
               <div className="flex gap-4 text-sm">
@@ -570,7 +527,6 @@ export default function ClientLayout({
               </div>
             </div>
           </div>
-
           <div className="text-center text-xs text-gray-500 mt-10 pt-8 border-t border-neutral-800">
             © {new Date().getFullYear()} TechPolitics. All rights reserved.
           </div>
