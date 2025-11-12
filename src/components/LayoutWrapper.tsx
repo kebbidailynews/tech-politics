@@ -20,13 +20,12 @@ interface LayoutWrapperProps {
 
 export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
   try {
-    // Parallel fetch: categories, trending posts, and latest headlines
     const [categories, trending, headlines] = await Promise.all([
       client.fetch<Category[]>(
         `*[_type == "category" && defined(slug.current)]{
           _id,
           title,
-          "slug": slug.current
+          slug
         }`
       ),
       client.fetch<TrendingPost[]>(
@@ -43,16 +42,16 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
         .catch(() => []),
     ]);
 
-    // Normalize categories: convert slug.current → string, add /category/ prefix
+    // ✅ Properly handle slug.current
     const cleanCategories = categories
       .filter(
-        (c): c is { _id: string; title: string; slug: string } =>
-          typeof c.slug === 'string' && c.slug.trim().length > 0
+        (c): c is Category & { slug: { current: string } } =>
+          !!c.slug?.current && typeof c.slug.current === 'string'
       )
       .map((c) => ({
         _id: c._id,
         title: c.title,
-        slug: `/category/${c.slug}`,
+        slug: `/category/${c.slug.current}`,
       }));
 
     return (
