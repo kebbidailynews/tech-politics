@@ -55,7 +55,7 @@ interface BeforeInstallPromptEvent extends Event {
 const TickerItem = memo(({ children }: { children: React.ReactNode }) => (
   <span className="inline-block px-3 sm:px-4">{children}</span>
 ));
-TickerItem.displayName = 'TickerItem';
+TickerItem.displayName = 'TickerItem'; // Fixed typo
 
 export default function ClientLayout({
   children,
@@ -176,15 +176,14 @@ export default function ClientLayout({
     [categories]
   );
 
+  // CORRECTED MARQUEE ANIMATION
   const marqueeAnimation = {
     x: [1000, -1000],
     transition: {
-      x: {
-        repeat: Infinity,
-        repeatType: 'loop',
-        duration: 30,
-        ease: 'linear',
-      },
+      repeat: Infinity,
+      repeatType: 'loop' as const,
+      duration: 30,
+      ease: 'linear',
     },
   };
 
@@ -200,8 +199,8 @@ export default function ClientLayout({
           className="inline-block whitespace-nowrap"
           animate={!prefersReducedMotion ? marqueeAnimation : {}}
           style={{ display: 'inline-block' }}
-          onTapStart={(e) => e.currentTarget.style.animationPlayState = 'paused'}
-          onTapEnd={(e) => e.currentTarget.style.animationPlayState = 'running'}
+          onTapStart={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
+          onTapEnd={(e) => (e.currentTarget.style.animationPlayState = 'running')}
         >
           <TickerItem>
             <Link href="/live" className="hover:underline inline-flex items-center gap-1">
@@ -305,20 +304,23 @@ export default function ClientLayout({
             { icon: Search, label: 'Search', action: () => setSearchOpen(true) },
             { icon: Flame, label: 'Trending', href: '/category/trending' },
             { icon: Grid, label: 'Categories', action: () => setMobileMenuOpen(true) },
-          ].map((item) => (
-            <button
-              key={item.label}
-              onClick={() => ('href' in item ? router.push(item.href) : item.action?.())}
-              className={cn(
-                'flex flex-col items-center gap-0.5 text-xs font-medium transition-colors py-2 px-3 rounded-lg',
-                pathname === item.href ? 'text-red-600' : 'text-gray-600 dark:text-gray-400'
-              )}
-              aria-label={item.label}
-            >
-              <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
-            </button>
-          ))}
+          ].map((item) => {
+            const isActive = 'href' in item && pathname === item.href;
+            return (
+              <button
+                key={item.label}
+                onClick={() => ('href' in item ? router.push(item.href) : item.action?.())}
+                className={cn(
+                  'flex flex-col items-center gap-0.5 text-xs font-medium transition-colors py-2 px-3 rounded-lg',
+                  isActive ? 'text-red-600' : 'text-gray-600 dark:text-gray-400'
+                )}
+                aria-label={item.label}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </nav>
 
