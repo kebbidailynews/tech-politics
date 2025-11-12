@@ -7,7 +7,8 @@ import {
   Clock,
   DollarSign,
   Download,
-  X, // ← ADD THIS LINE
+  X,
+  Menu, // ← NEW: Hamburger icon
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,6 @@ interface ClientLayoutProps {
   headlines: string[];
 }
 
-// PWA install-prompt type
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
@@ -50,18 +50,19 @@ export default function ClientLayout({
   headlines = [],
 }: ClientLayoutProps) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // ← NEW
   const [ticker, setTicker] = useState('');
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const pathname = usePathname();
 
-  // Close search on route change
+  // Close both modals on route change
   useEffect(() => {
     setSearchOpen(false);
+    setMobileMenuOpen(false);
   }, [pathname]);
 
-  /* ──────── Headline ticker ──────── */
+  /* ──────── Headline Ticker ──────── */
   useEffect(() => {
     const update = () => {
       const wat = new Date().toLocaleTimeString('en-NG', {
@@ -83,13 +84,11 @@ export default function ClientLayout({
     return () => clearInterval(id);
   }, [headlines]);
 
-  /* ──────── NGN/USD rate ──────── */
+  /* ──────── NGN/USD Rate ──────── */
   useEffect(() => {
     const fetchRate = async () => {
       try {
-        const res = await fetch(
-          'https://api.exchangerate-api.com/v4/latest/USD'
-        );
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
         const data = await res.json();
         const rate = data.rates.NGN?.toFixed(0) ?? '1,650';
         setNgnUsd(`1 USD = ${rate} NGN`);
@@ -98,25 +97,18 @@ export default function ClientLayout({
       }
     };
     fetchRate();
-    const id = setInterval(fetchRate, 300_000); // 5 min
+    const id = setInterval(fetchRate, 300_000);
     return () => clearInterval(id);
   }, []);
 
-  /* ──────── PWA install prompt ──────── */
+  /* ──────── PWA Install Prompt ──────── */
   useEffect(() => {
     const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
-    window.addEventListener(
-      'beforeinstallprompt',
-      handler as EventListener
-    );
-    return () =>
-      window.removeEventListener(
-        'beforeinstallprompt',
-        handler as EventListener
-      );
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
   const handleInstall = () => {
@@ -125,22 +117,21 @@ export default function ClientLayout({
     deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
   };
 
-  /* ──────── Render ──────── */
   return (
     <>
       {/* Ticker */}
-      <div className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap">
-          <Link href="/live" className="inline-block px-4 hover:underline">
+      <div className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden whitespace-nowrap">
+        <div className="inline-block animate-marquee">
+          <Link href="/live" className="inline-block px-3 sm:px-4 hover:underline">
             LIVE: {ticker}
           </Link>
-          <span className="inline-block px-4">•</span>
+          <span className="inline-block px-3 sm:px-4">•</span>
           <span className="inline-flex items-center gap-1">
             <DollarSign className="w-3 h-3" /> {ngnUsd}
           </span>
           {deferredPrompt && (
             <>
-              <span className="inline-block px-4">•</span>
+              <span className="inline-block px-3 sm:px-4">•</span>
               <button
                 onClick={handleInstall}
                 className="inline-flex items-center gap-1 hover:underline"
@@ -156,16 +147,36 @@ export default function ClientLayout({
       <header className="sticky top-0 z-50 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Title – always visible */}
+            {/* Logo */}
             <Link
               href="/"
-              className="text-3xl font-black tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent"
+              className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent"
             >
               TechPolitics
             </Link>
 
-            {/* Desktop navigation */}
-            <nav className="hidden lg:flex items-center space-x-1">
+            {/* Mobile: Hamburger + Search */}
+            <div className="flex items-center gap-2 lg:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-2"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchOpen(true)}
+                className="p-2"
+              >
+                <Search className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Desktop Nav */}
+            <nav className="hidden lg:flex items-center space-x-1 overflow-x-auto whitespace-nowrap">
               {[
                 { label: 'Home', href: '/' },
                 ...categories.map((cat) => ({
@@ -178,53 +189,69 @@ export default function ClientLayout({
                   href={item.href}
                   className={cn(
                     'px-3 py-2 text-sm font-bold uppercase tracking-wider transition',
-                    pathname === item.href
-                      ? 'text-red-600'
-                      : 'hover:text-red-600'
+                    pathname === item.href ? 'text-red-600' : 'hover:text-red-600'
                   )}
                 >
                   {item.label}
                 </Link>
               ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchOpen(true)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSearchOpen(true)}>
                 <Search className="w-4 h-4" />
               </Button>
             </nav>
-
-            {/* Mobile: only search button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setSearchOpen(true)}
-            >
-              <Search className="w-5 h-5" />
-            </Button>
           </div>
         </div>
 
-        {/* Search overlay (full-screen) */}
+        {/* Mobile Menu Overlay */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-40 bg-white dark:bg-neutral-900 flex flex-col p-4">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Menu</h2>
+              <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+            <nav className="space-y-3 flex-1">
+              <Link
+                href="/"
+                className="block py-3 text-lg font-medium hover:text-red-600"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              {categories.map((cat) => (
+                <Link
+                  key={cat._id}
+                  href={cat.slug}
+                  className="block py-3 text-lg font-medium hover:text-red-600"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {cat.title}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        )}
+
+        {/* Search Overlay */}
         {searchOpen && (
-          <div className="fixed inset-0 z-50 bg-white dark:bg-neutral-900 flex items-center justify-center p-6">
-            <div className="w-full max-w-2xl">
-              <div className="flex gap-3">
+          <div className="fixed inset-0 z-50 bg-white dark:bg-neutral-900 flex flex-col items-center justify-center p-6">
+            <div className="w-full max-w-xl">
+              <div className="flex gap-2">
                 <Input
                   placeholder="Search AI, China, Africa..."
-                  className="text-lg h-14"
+                  className="text-lg h-14 flex-1"
                   autoFocus
                 />
-                <Button size="lg" className="bg-red-600 hover:bg-red-700">
+                <Button size="lg" className="bg-red-600 hover:bg-red-700 px-6">
                   Search
                 </Button>
               </div>
             </div>
             <button
               onClick={() => setSearchOpen(false)}
-              className="absolute top-6 right-6"
+              className="absolute top-6 right-6 p-2"
+              aria-label="Close"
             >
               <X className="w-6 h-6" />
             </button>
@@ -232,58 +259,54 @@ export default function ClientLayout({
         )}
       </header>
 
-      {/* ──────── Main content (unchanged) ──────── */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <aside className="lg:w-64 space-y-6">
-          <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
-            <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3">
-              Categories
-            </h3>
-            <ul className="space-y-2">
-              {categories.map((cat) => (
-                <li key={cat._id}>
-                  <Link
-                    href={cat.slug}
-                    className="block text-sm hover:text-red-600"
-                  >
-                    {cat.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
-            <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" /> Trending
-            </h3>
-            <ol className="space-y-2 text-sm">
-              {trending.map((post, i) => (
-                <li key={post.slug} className="flex gap-2">
-                  <span className="font-bold text-red-600">
-                    {i + 1}
-                  </span>
-                  <Link
-                    href={`/post/${post.slug}`}
-                    className="hover:text-red-600 line-clamp-2"
-                  >
-                    {post.title}
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </aside>
-        <main className="flex-1">{children}</main>
+      {/* Main Content */}
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <aside className="lg:w-64 space-y-6 order-2 lg:order-1">
+            <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4 sm:p-5">
+              <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3">
+                Categories
+              </h3>
+              <ul className="space-y-2 text-sm">
+                {categories.map((cat) => (
+                  <li key={cat._id}>
+                    <Link href={cat.slug} className="block hover:text-red-600 transition">
+                      {cat.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4 sm:p-5">
+              <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" /> Trending
+              </h3>
+              <ol className="space-y-2 text-sm">
+                {trending.map((post, i) => (
+                  <li key={post.slug} className="flex gap-2">
+                    <span className="font-bold text-red-600 w-5">{i + 1}</span>
+                    <Link
+                      href={`/post/${post.slug}`}
+                      className="hover:text-red-600 line-clamp-2 flex-1"
+                    >
+                      {post.title}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </aside>
+
+          <main className="flex-1 order-1 lg:order-2">{children}</main>
+        </div>
       </div>
 
-      {/* ──────── Footer (unchanged) ──────── */}
-      <footer className="bg-neutral-900 text-white py-12">
+      {/* Footer */}
+      <footer className="bg-neutral-900 text-white py-12 mt-16">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link
-              href="/"
-              className="text-2xl font-black text-red-600 mb-3 inline-block"
-            >
+            <Link href="/" className="text-2xl font-black text-red-600 mb-3 inline-block">
               TechPolitics
             </Link>
             <p className="text-sm text-gray-400">
@@ -305,10 +328,7 @@ export default function ClientLayout({
             <ul className="space-y-1 text-sm text-gray-400">
               {categories.slice(0, 3).map((cat) => (
                 <li key={cat._id}>
-                  <Link
-                    href={cat.slug}
-                    className="hover:text-red-500"
-                  >
+                  <Link href={cat.slug} className="hover:text-red-500">
                     {cat.title}
                   </Link>
                 </li>
@@ -318,39 +338,18 @@ export default function ClientLayout({
           <div>
             <h4 className="font-bold mb-3">Company</h4>
             <ul className="space-y-1 text-sm text-gray-400">
-              <li>
-                <Link href="/about" className="hover:text-red-500">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-red-500">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy-policy"
-                  className="hover:text-red-500"
-                >
-                  Privacy
-                </Link>
-              </li>
+              <li><Link href="/about" className="hover:text-red-500">About</Link></li>
+              <li><Link href="/contact" className="hover:text-red-500">Contact</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-red-500">Privacy</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold mb-3">Follow</h4>
-            <div className="flex gap-4 text-sm">
-              <Link
-                href="https://twitter.com/TechPolitics"
-                className="hover:text-red-500"
-              >
+            <div className="flex flex-col sm:flex-row gap-3 text-sm">
+              <Link href="https://twitter.com/TechPolitics" className="hover:text-red-500">
                 Twitter
               </Link>
-              <Link
-                href="https://linkedin.com/company/techpolitics"
-                className="hover:text-red-500"
-              >
+              <Link href="https://linkedin.com/company/techpolitics" className="hover:text-red-500">
                 LinkedIn
               </Link>
             </div>
@@ -361,18 +360,13 @@ export default function ClientLayout({
         </div>
       </footer>
 
-      {/* Marquee animation */}
+      {/* Marquee Animation */}
       <style jsx>{`
         @keyframes marquee {
-          0% {
-            transform: translateX(100%);
-          }
-          100% {
-            transform: translateX(-100%);
-          }
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
         }
         .animate-marquee {
-          display: inline-block;
           animation: marquee 30s linear infinite;
         }
       `}</style>
