@@ -20,13 +20,13 @@ interface LayoutWrapperProps {
 
 export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
   try {
-    // Fetch categories, trending posts, and latest headlines in parallel
+    // Parallel fetch: categories, trending posts, and latest headlines
     const [categories, trending, headlines] = await Promise.all([
       client.fetch<Category[]>(
         `*[_type == "category" && defined(slug.current)]{
           _id,
           title,
-          slug
+          "slug": slug.current
         }`
       ),
       client.fetch<TrendingPost[]>(
@@ -40,17 +40,19 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
         .fetch<string[]>(
           `*[_type == "post"] | order(publishedAt desc)[0...10].title`
         )
-        .catch(() => []),
+        .catch(() => []), // Graceful fallback
     ]);
 
-    // Add relative /category/ prefix for internal links
+    // Normalize categories: ensure valid slug + add /category/ prefix
     const cleanCategories = categories
+      .filter((c): c is { _id: string; title: string; slug: string } => 
+        !!c.slug && typeof c.slug === 'string'
+      )
       .map((c) => ({
         _id: c._id,
         title: c.title,
-        slug: c.slug?.current ? `/category/${c.slug.current}` : '',
-      }))
-      .filter((c) => c.slug); // remove any invalid slugs
+        slug: `/category/${c.slug}`,
+      }));
 
     return (
       <ClientLayout
@@ -62,13 +64,13 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
       </ClientLayout>
     );
   } catch (error) {
-    console.error('Error fetching layout data:', error);
+    console.error('LayoutWrapper: Failed to fetch data', error);
 
-    // Fallback: empty arrays for all props
+    // Full fallback — prevents runtime crash
     return (
       <ClientLayout
         categories={[]}
-        trending={[]}   // ← This was missing before
+        trending={[]}
         headlines={[]}
       >
         {children}
