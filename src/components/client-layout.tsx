@@ -8,7 +8,7 @@ import {
   DollarSign,
   Download,
   X,
-  Menu,
+  Menu, // ← NEW: Hamburger icon
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -50,12 +50,13 @@ export default function ClientLayout({
   headlines = [],
 }: ClientLayoutProps) {
   const [searchOpen, setSearchOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // ← NEW
   const [ticker, setTicker] = useState('');
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const pathname = usePathname();
 
+  // Close both modals on route change
   useEffect(() => {
     setSearchOpen(false);
     setMobileMenuOpen(false);
@@ -145,23 +146,22 @@ export default function ClientLayout({
       {/* ──────── Header ──────── */}
       <header className="sticky top-0 z-50 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Logo + Mobile Buttons (Stacked on Mobile) */}
-          <div className="flex flex-col items-center lg:flex-row lg:justify-between lg:items-center">
+          <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link
               href="/"
-              className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent py-3 lg:py-0"
+              className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent"
             >
               TechPolitics
             </Link>
 
-            {/* Mobile: Buttons Below Logo */}
-            <div className="flex gap-3 pb-3 lg:hidden">
+            {/* Mobile: Hamburger + Search */}
+            <div className="flex items-center gap-2 lg:hidden">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-3"
+                className="p-2"
               >
                 <Menu className="w-5 h-5" />
               </Button>
@@ -169,7 +169,7 @@ export default function ClientLayout({
                 variant="ghost"
                 size="sm"
                 onClick={() => setSearchOpen(true)}
-                className="p-3"
+                className="p-2"
               >
                 <Search className="w-5 h-5" />
               </Button>
@@ -202,35 +202,33 @@ export default function ClientLayout({
           </div>
         </div>
 
-        {/* Mobile Menu Overlay — Clean, Vertical, Full-Width */}
+        {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-40 bg-white dark:bg-neutral-900 flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-neutral-800">
+          <div className="fixed inset-0 z-40 bg-white dark:bg-neutral-900 flex flex-col p-4">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Menu</h2>
               <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
                 <X className="w-6 h-6" />
               </Button>
             </div>
-            <nav className="flex-1 overflow-y-auto">
-              <div className="px-4 py-2 space-y-1">
+            <nav className="space-y-3 flex-1">
+              <Link
+                href="/"
+                className="block py-3 text-lg font-medium hover:text-red-600"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              {categories.map((cat) => (
                 <Link
-                  href="/"
-                  className="block w-full text-left py-4 text-lg font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg px-2"
+                  key={cat._id}
+                  href={cat.slug}
+                  className="block py-3 text-lg font-medium hover:text-red-600"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Home
+                  {cat.title}
                 </Link>
-                {categories.map((cat) => (
-                  <Link
-                    key={cat._id}
-                    href={cat.slug}
-                    className="block w-full text-left py-4 text-lg font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg px-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {cat.title}
-                  </Link>
-                ))}
-              </div>
+              ))}
             </nav>
           </div>
         )}
@@ -279,6 +277,7 @@ export default function ClientLayout({
                 ))}
               </ul>
             </div>
+
             <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4 sm:p-5">
               <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" /> Trending
@@ -298,6 +297,7 @@ export default function ClientLayout({
               </ol>
             </div>
           </aside>
+
           <main className="flex-1 order-1 lg:order-2">{children}</main>
         </div>
       </div>
