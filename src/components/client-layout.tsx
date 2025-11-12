@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTheme } from 'next-themes';
+
 interface Category {
   _id: string;
   title: string;
@@ -45,11 +46,13 @@ interface BeforeInstallPromptEvent extends Event {
   readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
   prompt(): Promise<void>;
 }
+
 // Memoized Ticker Item
 const TickerItem = memo(({ children }: { children: React.ReactNode }) => (
   <span className="inline-block px-3 sm:px-4">{children}</span>
 ));
 TickerItem.displayName = 'TickerItem';
+
 export default function ClientLayout({
   children,
   categories,
@@ -66,13 +69,16 @@ export default function ClientLayout({
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const prefersReducedMotion = useReducedMotion();
+
   // Mount effect
   useEffect(() => setMounted(true), []);
+
   // Close overlays on route change
   useEffect(() => {
     setSearchOpen(false);
     setMobileMenuOpen(false);
   }, [pathname]);
+
   // Keyboard shortcuts
   useHotkeys('cmd+k, ctrl+k', (e) => {
     e.preventDefault();
@@ -82,6 +88,7 @@ export default function ClientLayout({
     setSearchOpen(false);
     setMobileMenuOpen(false);
   });
+
   /* ──────── Headline Ticker ──────── */
   useEffect(() => {
     const updateTicker = () => {
@@ -102,6 +109,7 @@ export default function ClientLayout({
     const id = setInterval(updateTicker, 10000);
     return () => clearInterval(id);
   }, [headlines]);
+
   /* ──────── NGN/USD Rate (Cached) ──────── */
   useEffect(() => {
     const fetchRate = async () => {
@@ -130,6 +138,7 @@ export default function ClientLayout({
     const id = setInterval(fetchRate, 300_000);
     return () => clearInterval(id);
   }, []);
+
   /* ──────── PWA Install Prompt ──────── */
   useEffect(() => {
     const handler = (e: BeforeInstallPromptEvent) => {
@@ -139,11 +148,13 @@ export default function ClientLayout({
     window.addEventListener('beforeinstallprompt', handler as EventListener);
     return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
+
   const handleInstall = useCallback(() => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
   }, [deferredPrompt]);
+
   // Memoized nav items
   const navItems = useMemo(
     () => [
@@ -152,7 +163,8 @@ export default function ClientLayout({
     ],
     [categories]
   );
-  // FULLY TYPE-SAFE MARQUEE ANIMATION
+
+  // Marquee animation config
   const marqueeAnimation = {
     x: [1000, -1000],
     transition: {
@@ -162,19 +174,27 @@ export default function ClientLayout({
       ease: 'linear' as const,
     },
   };
+
   return (
     <>
       {/* SEO & Meta */}
       <meta name="theme-color" content="#dc2626" />
       <link rel="manifest" href="/manifest.json" />
+
       {/* Ticker Bar */}
       <div className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden relative">
         <motion.div
           className="inline-block whitespace-nowrap"
           animate={!prefersReducedMotion ? marqueeAnimation : {}}
           style={{ display: 'inline-block' }}
-          onTapStart={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = 'paused'; }}
-          onTapEnd={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = 'running'; }}
+          onTapStart={(e) => {
+            const target = e.currentTarget as HTMLElement | null;
+            if (target) target.style.animationPlayState = 'paused';
+          }}
+          onTapEnd={(e) => {
+            const target = e.currentTarget as HTMLElement | null;
+            if (target) target.style.animationPlayState = 'running';
+          }}
         >
           <TickerItem>
             <Link href="/live" className="hover:underline inline-flex items-center gap-1">
@@ -204,6 +224,7 @@ export default function ClientLayout({
           )}
         </motion.div>
       </div>
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 dark:bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-gray-200 dark:border-neutral-800">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -215,6 +236,7 @@ export default function ClientLayout({
             >
               TechPolitics
             </Link>
+
             {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-1">
               {navItems.map((item) => (
@@ -240,7 +262,7 @@ export default function ClientLayout({
                 aria-label="Open search (Cmd+K)"
               >
                 <Search className="w-4 h-4" />
-                <kbd className="hidden xl:inline ml-2 text-xs">⌘K</kbd>
+                <kbd className="hidden xl:inline ml-2 text-xs">Cmd+K</kbd>
               </Button>
               {mounted && (
                 <Button
@@ -253,6 +275,7 @@ export default function ClientLayout({
                 </Button>
               )}
             </nav>
+
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
@@ -266,6 +289,7 @@ export default function ClientLayout({
           </div>
         </div>
       </header>
+
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur border-t border-gray-200 dark:border-neutral-800">
         <div className="flex justify-around items-center h-16">
@@ -293,6 +317,7 @@ export default function ClientLayout({
           })}
         </div>
       </nav>
+
       {/* Mobile Menu Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
@@ -359,6 +384,7 @@ export default function ClientLayout({
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Search Modal */}
       <AnimatePresence>
         {searchOpen && (
@@ -379,7 +405,7 @@ export default function ClientLayout({
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const q = (e.target as HTMLFormElement).search.value;
+                  const q = (e.currentTarget.elements.namedItem('search') as HTMLInputElement).value;
                   router.push(`/search?q=${encodeURIComponent(q)}`);
                   setSearchOpen(false);
                 }}
@@ -427,6 +453,7 @@ export default function ClientLayout({
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Main Content */}
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 lg:pb-8">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -472,6 +499,7 @@ export default function ClientLayout({
           <article className="flex-1">{children}</article>
         </div>
       </main>
+
       {/* Footer */}
       <footer className="bg-neutral-900 text-white mt-16">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
