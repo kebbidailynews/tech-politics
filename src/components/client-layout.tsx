@@ -55,7 +55,7 @@ interface BeforeInstallPromptEvent extends Event {
 const TickerItem = memo(({ children }: { children: React.ReactNode }) => (
   <span className="inline-block px-3 sm:px-4">{children}</span>
 ));
-TickerItem.displayName = 'TickerItem'; // Fixed typo
+TickerItem.displayName = 'TickerItem';
 
 export default function ClientLayout({
   children,
@@ -176,14 +176,14 @@ export default function ClientLayout({
     [categories]
   );
 
-  // CORRECTED MARQUEE ANIMATION
+  // FULLY TYPE-SAFE MARQUEE ANIMATION
   const marqueeAnimation = {
     x: [1000, -1000],
     transition: {
       repeat: Infinity,
       repeatType: 'loop' as const,
       duration: 30,
-      ease: 'linear',
+      ease: 'linear' as const,
     },
   };
 
