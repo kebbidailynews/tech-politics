@@ -40,13 +40,14 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
         .fetch<string[]>(
           `*[_type == "post"] | order(publishedAt desc)[0...10].title`
         )
-        .catch(() => []), // Graceful fallback
+        .catch(() => []),
     ]);
 
-    // Normalize categories: ensure valid slug + add /category/ prefix
+    // Normalize categories: convert slug.current → string, add /category/ prefix
     const cleanCategories = categories
-      .filter((c): c is { _id: string; title: string; slug: string } => 
-        !!c.slug && typeof c.slug === 'string'
+      .filter(
+        (c): c is { _id: string; title: string; slug: string } =>
+          typeof c.slug === 'string' && c.slug.trim().length > 0
       )
       .map((c) => ({
         _id: c._id,
@@ -65,14 +66,8 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
     );
   } catch (error) {
     console.error('LayoutWrapper: Failed to fetch data', error);
-
-    // Full fallback — prevents runtime crash
     return (
-      <ClientLayout
-        categories={[]}
-        trending={[]}
-        headlines={[]}
-      >
+      <ClientLayout categories={[]} trending={[]} headlines={[]}>
         {children}
       </ClientLayout>
     );
