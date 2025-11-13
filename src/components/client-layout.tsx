@@ -17,24 +17,27 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion'; // NEW: For smoother animations
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Category {
   _id: string;
   title: string;
   slug: string;
 }
+
 interface TrendingPost {
   title: string;
   slug: string;
   views?: number;
 }
+
 interface ClientLayoutProps {
   children: React.ReactNode;
   categories: Category[];
   trending: TrendingPost[];
   headlines: string[];
 }
+
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
@@ -43,6 +46,7 @@ interface BeforeInstallPromptEvent extends Event {
   }>;
   prompt(): Promise<void>;
 }
+
 export default function ClientLayout({
   children,
   categories,
@@ -119,199 +123,190 @@ export default function ClientLayout({
 
   return (
     <>
-      {/* Ticker: Optimized for mobile with touch pause */}
+      {/* Ticker: Touch-pausable, uses global .animate-marquee-mobile */}
       <div
-        className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden whitespace-nowrap touch-pan-x" // NEW: touch-pan-x for better scroll control
-        onTouchStart={(e) => e.currentTarget.style.animationPlayState = 'paused'} // NEW: Pause on touch
-        onTouchEnd={(e) => e.currentTarget.style.animationPlayState = 'running'}
+        className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden whitespace-nowrap"
+        onTouchStart={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
+        onTouchEnd={(e) => (e.currentTarget.style.animationPlayState = 'running')}
       >
-        <div className="inline-block animate-marquee">
-          <Link href="/live" className="inline-block px-3 sm:px-4 hover:underline">
+        <div className="inline-block animate-marquee-mobile">
+          <Link href="/live" className="inline-block px-3 hover:underline">
             LIVE: {ticker}
           </Link>
-          <span className="inline-block px-3 sm:px-4">•</span>
+          <span className="inline-block px-3">•</span>
           <span className="inline-flex items-center gap-1">
             <DollarSign className="w-3 h-3" /> {ngnUsd}
           </span>
           {deferredPrompt && (
             <>
-              <span className="inline-block px-3 sm:px-4">•</span>
+              <span className="inline-block px-3">•</span>
               <button
                 onClick={handleInstall}
                 className="inline-flex items-center gap-1 hover:underline"
               >
-                <Download className="w-3 h-3" /> Install App
+                <Download className="w-3 h-3" /> Install
               </button>
             </>
           )}
         </div>
       </div>
-      {/* ──────── Header ──────── */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 shadow-sm">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link
-              href="/"
-              className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent"
-            >
-              TechPolitics
-            </Link>
-            {/* Mobile: Only Hamburger (Search moved to bottom nav) */}
-            <div className="flex items-center gap-2 lg:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setMobileMenuOpen(true)}
-                className="p-2"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
-            </div>
-            {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center space-x-1 overflow-x-auto whitespace-nowrap">
-              {[
-                { label: 'Home', href: '/' },
-                ...categories.map((cat) => ({
-                  label: cat.title,
-                  href: cat.slug,
-                })),
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'px-3 py-2 text-sm font-bold uppercase tracking-wider transition',
-                    pathname === item.href ? 'text-red-600' : 'hover:text-red-600'
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <Button variant="ghost" size="sm" onClick={() => setSearchOpen(true)}>
-                <Search className="w-4 h-4" />
-              </Button>
-            </nav>
-          </div>
+
+      {/* Header: Mobile-first, sticky, safe-area aware */}
+      <header className="sticky top-0 z-40 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 pt-safe">
+        <div className="flex items-center justify-between h-14 px-4">
+          <Link
+            href="/"
+            className="text-xl font-black bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent"
+          >
+            TechPolitics
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileMenuOpen(true)}
+            className="lg:hidden p-2"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
         </div>
       </header>
-      {/* Mobile Bottom Nav: NEW - For quick access on mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-800 shadow-lg flex justify-around items-center h-16">
-        <Link href="/" className="flex flex-col items-center gap-1 text-xs font-medium">
-          <Home className="w-5 h-5" />
-          Home
-        </Link>
-        <button onClick={() => setSearchOpen(true)} className="flex flex-col items-center gap-1 text-xs font-medium">
-          <Search className="w-5 h-5" />
-          Search
-        </button>
-        <Link href="/category/trending" className="flex flex-col items-center gap-1 text-xs font-medium"> {/* Assuming /trending page */}
-          <Flame className="w-5 h-5" />
-          Trending
-        </Link>
-        <button onClick={() => setMobileMenuOpen(true)} className="flex flex-col items-center gap-1 text-xs font-medium">
-          <Grid className="w-5 h-5" />
-          Categories
-        </button>
+
+      {/* Desktop Nav */}
+      <nav className="hidden lg:flex items-center space-x-1 overflow-x-auto whitespace-nowrap px-4 py-2 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
+        {[
+          { label: 'Home', href: '/' },
+          ...categories.map((cat) => ({ label: cat.title, href: cat.slug })),
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              'px-3 py-2 text-sm font-bold uppercase tracking-wider transition',
+              pathname === item.href ? 'text-red-600' : 'hover:text-red-600'
+            )}
+          >
+            {item.label}
+          </Link>
+        ))}
+        <Button variant="ghost" size="sm" onClick={() => setSearchOpen(true)}>
+          <Search className="w-4 h-4" />
+        </Button>
       </nav>
-      {/* Mobile Menu: Enhanced with animations and integrated trending */}
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-800 flex justify-around items-center h-16 shadow-lg pb-safe">
+        <NavItem href="/" icon={<Home className="w-5 h-5" />} label="Home" />
+        <NavItem onClick={() => setSearchOpen(true)} icon={<Search className="w-5 h-5" />} label="Search" />
+        <NavItem href="/category/trending" icon={<Flame className="w-5 h-5" />} label="Trending" />
+        <NavItem onClick={() => setMobileMenuOpen(true)} icon={<Grid className="w-5 h-5" />} label="Menu" />
+      </nav>
+
+      {/* Mobile Menu Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed inset-0 z-40 bg-white dark:bg-neutral-900 flex flex-col p-4 overflow-y-auto"
+            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+            className="fixed inset-0 z-50 bg-white dark:bg-neutral-900 flex flex-col"
           >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Menu</h2>
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-800">
+              <h2 className="text-lg font-bold">Menu</h2>
               <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
                 <X className="w-6 h-6" />
               </Button>
             </div>
-            <nav className="space-y-3">
-              <Link
-                href="/"
-                className="block py-3 text-lg font-medium hover:text-red-600"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-              {categories.map((cat) => (
+            <div className="flex-1 overflow-y-auto px-4 py-2">
+              <section className="mb-6">
                 <Link
-                  key={cat._id}
-                  href={cat.slug}
-                  className="block py-3 text-lg font-medium hover:text-red-600"
+                  href="/"
                   onClick={() => setMobileMenuOpen(false)}
+                  className="block py-3 text-base font-medium hover:text-red-600 border-b border-gray-100 dark:border-neutral-800"
                 >
-                  {cat.title}
+                  Home
                 </Link>
-              ))}
-            </nav>
-            <div className="mt-8">
-              <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" /> Trending
-              </h3>
-              <ol className="space-y-2 text-sm">
-                {trending.slice(0, 5).map((post, i) => ( // Limit to 5 for mobile
-                  <li key={post.slug} className="flex gap-2">
-                    <span className="font-bold text-red-600 w-5">{i + 1}</span>
-                    <Link
-                      href={`/post/${post.slug}`}
-                      className="hover:text-red-600 line-clamp-2 flex-1"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {post.title}
-                    </Link>
-                  </li>
+                {categories.map((cat) => (
+                  <Link
+                    key={cat._id}
+                    href={cat.slug}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block py-3 text-base font-medium hover:text-red-600 border-b border-gray-100 dark:border-neutral-800"
+                  >
+                    {cat.title}
+                  </Link>
                 ))}
-              </ol>
+              </section>
+
+              <section>
+                <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-red-600 mb-3">
+                  <TrendingUp className="w-4 h-4" /> Trending
+                </h3>
+                <ol className="space-y-2 text-sm">
+                  {trending.slice(0, 6).map((post, i) => (
+                    <li key={post.slug} className="flex gap-2">
+                      <span className="font-bold text-red-600 w-5">{i + 1}</span>
+                      <Link
+                        href={`/post/${post.slug}`}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="line-clamp-2 hover:text-red-600 flex-1"
+                      >
+                        {post.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </section>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Search Overlay: Enhanced with animations */}
+
+      {/* Search Overlay */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-white dark:bg-neutral-900 flex flex-col items-center justify-center p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-white dark:bg-neutral-900 flex flex-col items-center justify-center p-4"
+            onClick={() => setSearchOpen(false)}
           >
-            <div className="w-full max-w-xl">
+            <motion.div
+              initial={{ scale: 0.94 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.94 }}
+              className="w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex gap-2">
                 <Input
                   placeholder="Search AI, China, Africa..."
-                  className="text-lg h-14 flex-1"
+                  className="h-12 text-base"
                   autoFocus
                 />
-                <Button size="lg" className="bg-red-600 hover:bg-red-700 px-6">
-                  Search
-                </Button>
+                <Button className="bg-red-600 hover:bg-red-700 px-5">Go</Button>
               </div>
-              {/* NEW: Suggested searches for creativity */}
-              <div className="mt-4 text-sm text-gray-500">
-                <p>Suggested: AI Ethics • Tech in Africa • Geopolitics</p>
-              </div>
-            </div>
+              <p className="mt-3 text-xs text-gray-500">
+                Try: <span className="underline">AI Ethics</span> • <span className="underline">6G Africa</span> • <span className="underline">Quantum</span>
+              </p>
+            </motion.div>
             <button
+              className="absolute top-5 right-5 p-2"
               onClick={() => setSearchOpen(false)}
-              className="absolute top-6 right-6 p-2"
-              aria-label="Close"
             >
               <X className="w-6 h-6" />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Main Content: Adjusted padding for bottom nav */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:pb-8 pb-20"> {/* NEW: pb-20 for bottom nav */}
+
+      {/* Main Content */}
+      <main className="pb-20 pt-4 px-4 mx-auto max-w-2xl lg:pb-8 lg:pt-8 lg:max-w-none">
         <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="lg:w-64 space-y-6 order-2 lg:order-1 hidden lg:block"> {/* NEW: Hide aside on mobile, integrate in menu */}
-            <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4 sm:p-5">
+          {/* Desktop Sidebar */}
+          <aside className="lg:w-64 space-y-6 order-2 lg:order-1 hidden lg:block">
+            <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
               <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3">
                 Categories
               </h3>
@@ -325,7 +320,7 @@ export default function ClientLayout({
                 ))}
               </ul>
             </div>
-            <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4 sm:p-5">
+            <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-5">
               <h3 className="font-bold text-red-600 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" /> Trending
               </h3>
@@ -333,10 +328,7 @@ export default function ClientLayout({
                 {trending.map((post, i) => (
                   <li key={post.slug} className="flex gap-2">
                     <span className="font-bold text-red-600 w-5">{i + 1}</span>
-                    <Link
-                      href={`/post/${post.slug}`}
-                      className="hover:text-red-600 line-clamp-2 flex-1"
-                    >
+                    <Link href={`/post/${post.slug}`} className="hover:text-red-600 line-clamp-2 flex-1">
                       {post.title}
                     </Link>
                   </li>
@@ -344,19 +336,26 @@ export default function ClientLayout({
               </ol>
             </div>
           </aside>
-          <main className="flex-1 order-1 lg:order-2">{children}</main>
+          <div className="flex-1 order-1 lg:order-2">{children}</div>
         </div>
-      </div>
-      {/* Footer: Simplified for mobile */}
-      <footer className="bg-neutral-900 text-white py-8 mt-16 lg:py-12">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-neutral-900 text-white py-8 mt-12">
+        {/* Mobile Footer */}
+        <div className="px-4 text-center text-xs space-y-2 lg:hidden">
+          <Link href="/" className="text-lg font-black text-red-600 block">TechPolitics</Link>
+          <p className="text-gray-400">The world’s #1 source on tech geopolitics.</p>
+          <p className="text-gray-500">© 2025 TechPolitics. All rights reserved.</p>
+        </div>
+
+        {/* Desktop Footer */}
+        <div className="hidden lg:block max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="text-2xl font-black text-red-600 mb-3 inline-block">
               TechPolitics
             </Link>
-            <p className="text-sm text-gray-400">
-              The world’s #1 source on tech geopolitics.
-            </p>
+            <p className="text-sm text-gray-400">The world’s #1 source on tech geopolitics.</p>
             <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {new Date().toLocaleTimeString('en-NG', {
@@ -400,25 +399,39 @@ export default function ClientLayout({
             </div>
           </div>
         </div>
-        <div className="text-center text-xs text-gray-500 mt-6 border-t border-neutral-800 pt-4 lg:mt-8 lg:pt-6">
+        <div className="hidden lg:block text-center text-xs text-gray-500 mt-6 border-t border-neutral-800 pt-4">
           © 2025 TechPolitics. All rights reserved.
         </div>
       </footer>
-      {/* Marquee Animation: Adjusted speed for mobile */}
-      <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        .animate-marquee {
-          animation: marquee 20s linear infinite; /* NEW: Faster on mobile for quicker read */
-        }
-        @media (min-width: 768px) {
-          .animate-marquee {
-            animation-duration: 30s;
-          }
-        }
-      `}</style>
     </>
+  );
+}
+
+// Reusable Bottom Nav Item
+function NavItem({
+  href,
+  onClick,
+  icon,
+  label,
+}: {
+  href?: string;
+  onClick?: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  const baseClass = "flex flex-col items-center gap-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 min-h-14 justify-center flex-1";
+  if (href) {
+    return (
+      <Link href={href} className={baseClass}>
+        {icon}
+        <span>{label}</span>
+      </Link>
+    );
+  }
+  return (
+    <button onClick={onClick} className={baseClass}>
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }
