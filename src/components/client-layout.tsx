@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Search,
@@ -35,7 +35,7 @@ interface ClientLayoutProps {
   children: React.ReactNode;
   categories: Category[];
   trending: TrendingPost[];
-  headlines: string[];
+  headlines?: string[]; // Optional custom headlines
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -56,6 +56,7 @@ export default function ClientLayout({
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [ticker, setTicker] = useState('');
+  const [currentSlug, setCurrentSlug] = useState('/live');
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const pathname = usePathname();
@@ -66,7 +67,20 @@ export default function ClientLayout({
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  /* ──────── Headline Ticker ──────── */
+  /* ──────── Headline Ticker: Uses Real Articles ──────── */
+  const tickerItems = useMemo(() => {
+    if (headlines.length > 0) {
+      return headlines.map((title) => ({ title, slug: '/live' }));
+    }
+    if (trending.length > 0) {
+      return trending.map((post) => ({
+        title: post.title,
+        slug: `/post/${post.slug}`,
+      }));
+    }
+    return [{ title: 'Breaking tech news', slug: '/live' }];
+  }, [headlines, trending]);
+
   useEffect(() => {
     const update = () => {
       const wat = new Date().toLocaleTimeString('en-NG', {
@@ -75,18 +89,18 @@ export default function ClientLayout({
         minute: '2-digit',
         hour12: true,
       });
-      if (!headlines || headlines.length === 0) {
-        setTicker(`${wat} WAT — Breaking tech news`);
-        return;
-      }
-      const i = Math.floor(Date.now() / 10000) % headlines.length;
-      const headline = headlines[i] ?? 'Breaking tech news';
-      setTicker(`${wat} WAT — ${headline}`);
+
+      const i = Math.floor(Date.now() / 10000) % tickerItems.length;
+      const item = tickerItems[i];
+
+      setTicker(`${wat} WAT — ${item.title}`);
+      setCurrentSlug(item.slug);
     };
+
     update();
     const id = setInterval(update, 10000);
     return () => clearInterval(id);
-  }, [headlines]);
+  }, [tickerItems]);
 
   /* ──────── NGN/USD Rate ──────── */
   useEffect(() => {
@@ -123,14 +137,14 @@ export default function ClientLayout({
 
   return (
     <>
-      {/* Ticker: Touch-pausable, uses global .animate-marquee-mobile */}
+      {/* Ticker: Touch-pausable, shows real article titles */}
       <div
         className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden whitespace-nowrap"
         onTouchStart={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
         onTouchEnd={(e) => (e.currentTarget.style.animationPlayState = 'running')}
       >
         <div className="inline-block animate-marquee-mobile">
-          <Link href="/live" className="inline-block px-3 hover:underline">
+          <Link href={currentSlug} className="inline-block px-3 hover:underline">
             LIVE: {ticker}
           </Link>
           <span className="inline-block px-3">•</span>
@@ -151,7 +165,7 @@ export default function ClientLayout({
         </div>
       </div>
 
-      {/* Header: Mobile-first, sticky, safe-area aware */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 pt-safe">
         <div className="flex items-center justify-between h-14 px-4">
           <Link
@@ -171,26 +185,33 @@ export default function ClientLayout({
         </div>
       </header>
 
-      {/* Desktop Nav */}
-      <nav className="hidden lg:flex items-center space-x-1 overflow-x-auto whitespace-nowrap px-4 py-2 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
-        {[
-          { label: 'Home', href: '/' },
-          ...categories.map((cat) => ({ label: cat.title, href: cat.slug })),
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'px-3 py-2 text-sm font-bold uppercase tracking-wider transition',
-              pathname === item.href ? 'text-red-600' : 'hover:text-red-600'
-            )}
+      {/* Desktop Nav - Hidden on mobile */}
+      <nav className="hidden lg:block overflow-x-auto whitespace-nowrap px-4 py-2 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
+        <div className="flex items-center space-x-1">
+          {[
+            { label: 'Home', href: '/' },
+            ...categories.map((cat) => ({ label: cat.title, href: cat.slug })),
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'px-3 py-2 text-sm font-bold uppercase tracking-wider transition flex-shrink-0',
+                pathname === item.href ? 'text-red-600' : 'hover:text-red-600'
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSearchOpen(true)}
+            className="flex-shrink-0"
           >
-            {item.label}
-          </Link>
-        ))}
-        <Button variant="ghost" size="sm" onClick={() => setSearchOpen(true)}>
-          <Search className="w-4 h-4" />
-        </Button>
+            <Search className="w-4 h-4" />
+          </Button>
+        </div>
       </nav>
 
       {/* Mobile Bottom Navigation */}
@@ -237,7 +258,6 @@ export default function ClientLayout({
                   </Link>
                 ))}
               </section>
-
               <section>
                 <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-red-600 mb-3">
                   <TrendingUp className="w-4 h-4" /> Trending
@@ -348,7 +368,6 @@ export default function ClientLayout({
           <p className="text-gray-400">The world’s #1 source on tech geopolitics.</p>
           <p className="text-gray-500">© 2025 TechPolitics. All rights reserved.</p>
         </div>
-
         {/* Desktop Footer */}
         <div className="hidden lg:block max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
           <div className="col-span-2 md:col-span-1">
