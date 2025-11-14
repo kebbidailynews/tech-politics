@@ -35,7 +35,7 @@ interface ClientLayoutProps {
   children: React.ReactNode;
   categories: Category[];
   trending: TrendingPost[];
-  headlines?: string[]; // Optional custom headlines
+  headlines?: string[];
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -56,7 +56,6 @@ export default function ClientLayout({
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [ticker, setTicker] = useState('');
-  const [currentSlug, setCurrentSlug] = useState('/live');
   const [ngnUsd, setNgnUsd] = useState('1 USD = 1,650 NGN');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const pathname = usePathname();
@@ -67,18 +66,15 @@ export default function ClientLayout({
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  /* ──────── Headline Ticker: Uses Real Articles ──────── */
+  /* ──────── Headline Ticker: Real Titles, Only LIVE: Clickable ──────── */
   const tickerItems = useMemo(() => {
     if (headlines.length > 0) {
-      return headlines.map((title) => ({ title, slug: '/live' }));
+      return headlines;
     }
     if (trending.length > 0) {
-      return trending.map((post) => ({
-        title: post.title,
-        slug: `/post/${post.slug}`,
-      }));
+      return trending.map((post) => post.title);
     }
-    return [{ title: 'Breaking tech news', slug: '/live' }];
+    return ['Breaking tech news'];
   }, [headlines, trending]);
 
   useEffect(() => {
@@ -91,10 +87,9 @@ export default function ClientLayout({
       });
 
       const i = Math.floor(Date.now() / 10000) % tickerItems.length;
-      const item = tickerItems[i];
+      const title = tickerItems[i] ?? 'Breaking tech news';
 
-      setTicker(`${wat} WAT — ${item.title}`);
-      setCurrentSlug(item.slug);
+      setTicker(`${wat} WAT — ${title}`);
     };
 
     update();
@@ -137,16 +132,17 @@ export default function ClientLayout({
 
   return (
     <>
-      {/* Ticker: Touch-pausable, shows real article titles */}
+      {/* Ticker: LIVE: clickable, title NOT clickable */}
       <div
         className="bg-red-600 text-white text-xs font-bold py-1.5 overflow-hidden whitespace-nowrap"
         onTouchStart={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
         onTouchEnd={(e) => (e.currentTarget.style.animationPlayState = 'running')}
       >
         <div className="inline-block animate-marquee-mobile">
-          <Link href={currentSlug} className="inline-block px-3 hover:underline">
-            LIVE: {ticker}
+          <Link href="/blog" className="inline-block px-3 hover:underline">
+            LIVE:
           </Link>
+          <span className="inline-block px-1">{ticker}</span>
           <span className="inline-block px-3">•</span>
           <span className="inline-flex items-center gap-1">
             <DollarSign className="w-3 h-3" /> {ngnUsd}
