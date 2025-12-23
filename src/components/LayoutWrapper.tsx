@@ -1,4 +1,5 @@
 // src/app/layout-wrapper.tsx
+export const revalidate = 3600; // cache for 1 hour
 import client from '@/lib/sanity';
 import ClientLayout from './client-layout';
 
