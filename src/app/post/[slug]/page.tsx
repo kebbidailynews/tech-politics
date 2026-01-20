@@ -1,4 +1,5 @@
 // src/app/post/[slug]/page.tsx
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 import client from "@/lib/sanity";
