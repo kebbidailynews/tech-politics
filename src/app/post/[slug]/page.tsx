@@ -1,23 +1,16 @@
 // src/app/post/[slug]/page.tsx
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // ensures server fetch each request
 export const runtime = "nodejs";
 
 import client from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import {
-  PortableText,
-  PortableTextComponents,
-  PortableTextBlock,
-} from "@portabletext/react";
+import { PortableText, PortableTextComponents, PortableTextBlock } from "@portabletext/react";
 
 interface SanityImage {
   _type: string;
-  asset: {
-    _ref: string;
-    _type: string;
-  };
+  asset: { _ref: string; _type: string };
 }
 
 interface Post {
@@ -28,16 +21,12 @@ interface Post {
   body: PortableTextBlock[];
 }
 
-export default async function PostPage({
-  params,
-}: {
-  params: { slug?: string };
-}) {
+export default async function PostPage({ params }: { params: { slug?: string } }) {
   const slug = params?.slug;
 
-  // 🔒 HARD GUARD — prevents Sanity "$slug=undefined" crash
+  // 🔒 HARD GUARD
   if (!slug || typeof slug !== "string") {
-    notFound();
+    return notFound();
   }
 
   const query = `
@@ -50,10 +39,17 @@ export default async function PostPage({
     }
   `;
 
-  const post: Post | null = await client.fetch(query, { slug });
+  let post: Post | null = null;
+
+  try {
+    post = await client.fetch(query, { slug });
+  } catch (err) {
+    console.error("Sanity fetch error:", err);
+    return notFound();
+  }
 
   if (!post) {
-    notFound();
+    return notFound();
   }
 
   return (
@@ -76,52 +72,23 @@ export default async function PostPage({
   );
 }
 
-// Custom components for PortableText
 const components: PortableTextComponents = {
   block: {
-    h1: ({ children }) => (
-      <h1 className="text-4xl font-bold mb-6">{children}</h1>
-    ),
-    h2: ({ children }) => (
-      <h2 className="text-2xl font-semibold mt-8 mb-4">{children}</h2>
-    ),
-    h3: ({ children }) => (
-      <h3 className="text-xl font-semibold mt-6 mb-3">{children}</h3>
-    ),
-    normal: ({ children }) => (
-      <p className="mb-4 text-lg leading-relaxed">{children}</p>
-    ),
+    h1: ({ children }) => <h1 className="text-4xl font-bold mb-6">{children}</h1>,
+    h2: ({ children }) => <h2 className="text-2xl font-semibold mt-8 mb-4">{children}</h2>,
+    h3: ({ children }) => <h3 className="text-xl font-semibold mt-6 mb-3">{children}</h3>,
+    normal: ({ children }) => <p className="mb-4 text-lg leading-relaxed">{children}</p>,
   },
   list: {
-    bullet: ({ children }) => (
-      <ul className="list-disc list-inside space-y-2 mb-6 text-lg leading-relaxed">
-        {children}
-      </ul>
-    ),
-    number: ({ children }) => (
-      <ol className="list-decimal list-inside space-y-2 mb-6 text-lg leading-relaxed">
-        {children}
-      </ol>
-    ),
+    bullet: ({ children }) => <ul className="list-disc list-inside space-y-2 mb-6 text-lg leading-relaxed">{children}</ul>,
+    number: ({ children }) => <ol className="list-decimal list-inside space-y-2 mb-6 text-lg leading-relaxed">{children}</ol>,
   },
   marks: {
     link: ({ value, children }) => {
       const href = value?.href || "";
       const isExternal = href.startsWith("http");
-
-      return (
-        <a
-          href={href}
-          target={isExternal ? "_blank" : undefined}
-          rel={isExternal ? "noopener noreferrer" : undefined}
-          className="text-blue-600 hover:underline"
-        >
-          {children}
-        </a>
-      );
+      return <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined} className="text-blue-600 hover:underline">{children}</a>;
     },
-    strong: ({ children }) => (
-      <strong className="font-semibold">{children}</strong>
-    ),
+    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
   },
 };
