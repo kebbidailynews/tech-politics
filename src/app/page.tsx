@@ -17,7 +17,6 @@ interface Post {
   mainImage?: { asset: { url: string } };
   category?: { title: string; slug: string };
   readingTime?: number;
-  views?: number;
 }
 
 // Helper: Prefer publishedAt → fallback to _createdAt
@@ -40,14 +39,13 @@ function formatRelativeTime(dateStr: string): string {
   if (diffHr < 24) return `${diffHr}h ago`;
   if (diffDay < 7) return `${diffDay}d ago`;
 
-  // Fallback to short date for older posts
   return date.toLocaleDateString('en-NG', {
     month: 'short',
     day: 'numeric',
   });
 }
 
-// ── GROQ Query now includes both dates ──
+// ── GROQ Query ──
 async function getHomeData() {
   const posts = await client.fetch<Post[]>(`
     *[_type == "post"]
@@ -61,14 +59,13 @@ async function getHomeData() {
       _createdAt,
       mainImage { asset-> { url } },
       "category": category-> { title, "slug": slug.current },
-      readingTime,
-      views
+      readingTime
     }
   `);
 
   const hero     = posts[0];
   const featured = posts.slice(1, 4);
-  const trending = [...posts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+  const trending = posts.slice(1, 6); // just top 5 latest posts, no views sorting
   const latest   = posts.slice(4, 10);
 
   return { hero, featured, trending, latest };
@@ -113,7 +110,6 @@ function HeroPost({ post }: { post: Post }) {
             {formatRelativeTime(getDisplayDate(post))}
           </span>
           {post.readingTime && <span>• {post.readingTime} min read</span>}
-          {post.views && <span>• {post.views.toLocaleString()} views</span>}
         </div>
       </div>
     </div>
@@ -180,7 +176,7 @@ function TrendingSidebar({ posts }: { posts: Post[] }) {
               </Link>
               <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {formatRelativeTime(getDisplayDate(post))} • {post.views?.toLocaleString() || 0} views
+                {formatRelativeTime(getDisplayDate(post))}
               </p>
             </div>
           </li>
