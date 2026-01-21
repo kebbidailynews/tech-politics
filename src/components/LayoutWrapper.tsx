@@ -1,11 +1,12 @@
-// src/app/layout-wrapper.tsx
+// src/app/layout-wrapper.tsx  (or src/components/LayoutWrapper.tsx)
+import { draftMode } from 'next/headers';
 import client from '@/lib/sanity';
 import ClientLayout from './client-layout';
 
 interface Category {
   _id: string;
   title: string;
-  slug?: { current: string } | null;
+  slug: { current: string };
 }
 
 interface TrendingPost {
@@ -18,36 +19,59 @@ interface LayoutWrapperProps {
   children: React.ReactNode;
 }
 
+async function sanityFetch<T>(
+  query: string,
+  tags: string[],
+  revalidateSeconds?: number
+): Promise<T> {
+  const draft = await draftMode();
+  const isEnabled = draft.isEnabled;
+
+  if (isEnabled) {
+    return client.fetch<T>(query, {}, { cache: 'no-store' });
+  }
+
+  return client.fetch<T>(query, {}, {
+    next: {
+      tags,
+      revalidate: revalidateSeconds ?? 3600,
+    },
+  });
+}
+
 export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
   try {
     const [categories, trending, headlines] = await Promise.all([
-      client.fetch<Category[]>(
-        `*[_type == "category" && defined(slug.current)]{
+      sanityFetch<Category[]>(
+        `*[_type == "category" && defined(slug.current)] | order(title asc) {
           _id,
           title,
           slug
-        }`
+        }`,
+        ['global', 'categories'],
+        86400 // 1 day fallback
       ),
-      client.fetch<TrendingPost[]>(
-        `*[_type == "post"] | order(views desc, publishedAt desc)[0...5]{
+
+      sanityFetch<TrendingPost[]>(
+        `*[_type == "post" && views > 0] 
+         | order(views desc, publishedAt desc)[0...5] {
           title,
           "slug": slug.current,
           views
-        }`
+        }`,
+        ['global', 'trending', 'posts'],
+        1800 // 30 min fallback
       ),
-      client
-        .fetch<string[]>(
-          `*[_type == "post"] | order(publishedAt desc)[0...10].title`
-        )
-        .catch(() => []),
+
+      sanityFetch<string[]>(
+        `*[_type == "post"] | order(publishedAt desc)[0...10].title`,
+        ['global', 'headlines', 'posts'],
+        900 // 15 min fallback
+      ).catch(() => []),
     ]);
 
-    // ✅ Properly handle slug.current
     const cleanCategories = categories
-      .filter(
-        (c): c is Category & { slug: { current: string } } =>
-          !!c.slug?.current && typeof c.slug.current === 'string'
-      )
+      .filter((c): c is Category => !!c.slug?.current)
       .map((c) => ({
         _id: c._id,
         title: c.title,
@@ -64,7 +88,7 @@ export default async function LayoutWrapper({ children }: LayoutWrapperProps) {
       </ClientLayout>
     );
   } catch (error) {
-    console.error('LayoutWrapper: Failed to fetch data', error);
+    console.error('LayoutWrapper fetch failed:', error);
     return (
       <ClientLayout categories={[]} trending={[]} headlines={[]}>
         {children}

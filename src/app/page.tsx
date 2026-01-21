@@ -1,9 +1,8 @@
-// src/app/page.tsx
 import Link from 'next/link';
 import Image from 'next/image';
 import { Clock, TrendingUp, ChevronRight } from 'lucide-react';
 import { Suspense } from 'react';
-import client  from '@/lib/sanity';
+import client from '@/lib/sanity';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,40 +12,71 @@ interface Post {
   title: string;
   slug: string;
   excerpt: string;
-  publishedAt: string;
+  publishedAt?: string;    // optional
+  _createdAt: string;      // nearly always available in Sanity
   mainImage?: { asset: { url: string } };
   category?: { title: string; slug: string };
   readingTime?: number;
   views?: number;
 }
 
-// ── Server Component: Fetch Data ──
+// Helper: Prefer publishedAt → fallback to _createdAt
+function getDisplayDate(post: Post): string {
+  const dateStr = post.publishedAt || post._createdAt;
+  return new Date(dateStr).toISOString();
+}
+
+// Simple relative time formatter (e.g. "2 days ago", "1h ago")
+function formatRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr  = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+
+  // Fallback to short date for older posts
+  return date.toLocaleDateString('en-NG', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+// ── GROQ Query now includes both dates ──
 async function getHomeData() {
-  const posts = await client.fetch<Post[]>(
-    `*[_type == "post"] | order(publishedAt desc) {
+  const posts = await client.fetch<Post[]>(`
+    *[_type == "post"]
+    | order(publishedAt desc, _createdAt desc)
+    {
       _id,
       title,
       "slug": slug.current,
       excerpt,
       publishedAt,
+      _createdAt,
       mainImage { asset-> { url } },
       "category": category-> { title, "slug": slug.current },
       readingTime,
       views
-    }`
-  );
+    }
+  `);
 
-  const hero = posts[0];
+  const hero     = posts[0];
   const featured = posts.slice(1, 4);
-  const trending = posts.sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
-  const latest = posts.slice(4, 10);
+  const trending = [...posts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+  const latest   = posts.slice(4, 10);
 
   return { hero, featured, trending, latest };
 }
 
-// ── Hero Card Component ──
+// ── Hero Card ──
 function HeroPost({ post }: { post: Post }) {
-  const time = new Date(post.publishedAt).toLocaleString('en-NG', {
+  const time = new Date(getDisplayDate(post)).toLocaleString('en-NG', {
     timeZone: 'Africa/Lagos',
     hour: 'numeric',
     minute: '2-digit',
@@ -70,9 +100,7 @@ function HeroPost({ post }: { post: Post }) {
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-        {post.category && (
-          <Badge className="mb-2 bg-red-600">{post.category.title}</Badge>
-        )}
+        {post.category && <Badge className="mb-2 bg-red-600">{post.category.title}</Badge>}
         <h1 className="text-3xl md:text-5xl font-black leading-tight">
           <Link href={`/post/${post.slug}`} className="hover:underline">
             {post.title}
@@ -81,7 +109,8 @@ function HeroPost({ post }: { post: Post }) {
         <p className="mt-2 text-sm opacity-90 line-clamp-2">{post.excerpt}</p>
         <div className="mt-3 flex items-center gap-3 text-xs">
           <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3" /> {time} WAT
+            <Clock className="w-3 h-3" />
+            {formatRelativeTime(getDisplayDate(post))}
           </span>
           {post.readingTime && <span>• {post.readingTime} min read</span>}
           {post.views && <span>• {post.views.toLocaleString()} views</span>}
@@ -110,9 +139,7 @@ function FeaturedGrid({ posts }: { posts: Post[] }) {
           )}
           <CardHeader>
             {post.category && (
-              <Badge variant="secondary" className="w-fit">
-                {post.category.title}
-              </Badge>
+              <Badge variant="secondary" className="w-fit">{post.category.title}</Badge>
             )}
             <CardTitle className="line-clamp-2">
               <Link href={`/post/${post.slug}`} className="hover:text-red-600">
@@ -124,11 +151,7 @@ function FeaturedGrid({ posts }: { posts: Post[] }) {
           <CardContent>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Clock className="w-3 h-3" />
-              {new Date(post.publishedAt).toLocaleDateString('en-NG', {
-                timeZone: 'Africa/Lagos',
-                month: 'short',
-                day: 'numeric',
-              })}
+              {formatRelativeTime(getDisplayDate(post))}
             </div>
           </CardContent>
         </Card>
@@ -155,8 +178,9 @@ function TrendingSidebar({ posts }: { posts: Post[] }) {
               >
                 {post.title}
               </Link>
-              <p className="text-xs text-gray-500 mt-1">
-                {post.views?.toLocaleString()} views
+              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {formatRelativeTime(getDisplayDate(post))} • {post.views?.toLocaleString() || 0} views
               </p>
             </div>
           </li>
@@ -172,12 +196,12 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* === HERO SECTION === */}
+      {/* HERO */}
       <section className="mb-12">
         {hero ? <HeroPost post={hero} /> : <div className="h-96 bg-gray-200 rounded-xl" />}
       </section>
 
-      {/* === LIVE TIME BANNER (NIGERIA) === */}
+      {/* LIVE TIME BANNER */}
       <div className="bg-red-600 text-white py-2 text-center font-bold text-sm">
         <Clock className="inline w-4 h-4 mr-1" />
         LIVE: {new Date().toLocaleTimeString('en-NG', {
@@ -185,10 +209,10 @@ export default async function HomePage() {
           hour: 'numeric',
           minute: '2-digit',
           hour12: true,
-        })} WAT • Tuesday, November 11, 2025
+        })} WAT • {new Date().toLocaleDateString('en-NG', { weekday: 'long', month: 'long', day: 'numeric' })}
       </div>
 
-      {/* === FEATURED GRID + TRENDING === */}
+      {/* FEATURED + TRENDING */}
       <section className="my-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3">
           <h2 className="text-2xl font-black mb-6 flex items-center gap-2">
@@ -203,7 +227,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* === LATEST NEWS === */}
+      {/* LATEST */}
       <section className="my-12">
         <h2 className="text-2xl font-black mb-6">Latest Updates</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -218,13 +242,10 @@ export default async function HomePage() {
                 <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>
-                    {new Date(post.publishedAt).toLocaleDateString('en-NG', {
-                      timeZone: 'Africa/Lagos',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {formatRelativeTime(getDisplayDate(post))}
                   </span>
                   {post.readingTime && <span>{post.readingTime} min</span>}
                 </div>

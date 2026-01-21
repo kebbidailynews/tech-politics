@@ -5,6 +5,7 @@ import client from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 interface SanityImage {
   _type: string;
@@ -27,15 +28,16 @@ interface Category {
   posts: Post[];
 }
 
-interface Params {
-  slug: string;
-}
+export default async function CategoryPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-export default async function CategoryPage(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  { params }: { params: any } /* cast below to Params */
-) {
-  const safeParams = params as Params;
+  if (!slug) {
+    notFound();
+  }
 
   // Fetch category and associated posts
   const query = `
@@ -50,19 +52,19 @@ export default async function CategoryPage(
       }
     }
   `;
-  const category: Category = await client.fetch(query, { slug: safeParams.slug });
+
+  const category: Category | null = await client.fetch(query, { slug });
 
   if (!category) {
-    return (
-      <div className="p-6 max-w-3xl mx-auto text-gray-800 dark:text-gray-100">
-        Category not found.
-      </div>
-    );
+    notFound();
   }
 
   return (
     <section className="p-6 max-w-3xl mx-auto text-gray-800 dark:text-gray-100">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-6">{category.title}</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold mb-6">
+        {category.title}
+      </h2>
+
       {category.posts.length === 0 ? (
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
           No posts found in this category.
@@ -75,7 +77,10 @@ export default async function CategoryPage(
                 {post.mainImage && (
                   <div className="relative w-full h-32">
                     <Image
-                      src={urlFor(post.mainImage).width(400).height(300).url()}
+                      src={urlFor(post.mainImage)
+                        .width(400)
+                        .height(300)
+                        .url()}
                       alt={post.title}
                       fill
                       className="object-cover rounded-t-lg"
@@ -83,6 +88,7 @@ export default async function CategoryPage(
                     />
                   </div>
                 )}
+
                 <div className="p-4">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition">
                     {post.title}
