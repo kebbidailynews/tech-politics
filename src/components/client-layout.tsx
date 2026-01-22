@@ -131,79 +131,105 @@ export default function ClientLayout({
 
   return (
     <>
-      {/* Breaking News Ticker - Fox Style – Mobile Improved (No Flame Icon) */}
-<div className="bg-gradient-to-r from-red-700 to-red-600 text-white overflow-hidden shadow-sm">
-  <div className="flex items-center h-9 sm:h-10">
-    {/* Fixed left label - no icon */}
-    <div className="bg-white text-red-700 px-4 font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center h-full flex-shrink-0 z-10 relative shadow-[2px_0_6px_rgba(0,0,0,0.3)]">
-      <Link href="/blog" className="hover:underline">HOT</Link>
-    </div>
+      {/* CSS for Marquee Animation */}
+      <style jsx global>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+          display: inline-flex;
+          white-space: nowrap;
+        }
+        
+        .pause-marquee .animate-marquee {
+          animation-play-state: paused;
+        }
+        
+        @media (max-width: 640px) {
+          .animate-marquee {
+            animation-duration: 25s;
+          }
+        }
+      `}</style>
 
-    {/* Scrolling area */}
-    <div
-      className="flex-1 overflow-hidden"
-      onMouseEnter={(e) => e.currentTarget.classList.add('pause-marquee')}
-      onMouseLeave={(e) => e.currentTarget.classList.remove('pause-marquee')}
-      onTouchStart={(e) => e.currentTarget.classList.add('pause-marquee')}
-      onTouchEnd={(e) => {
-        setTimeout(() => e.currentTarget.classList.remove('pause-marquee'), 80);
-      }}
-    >
-      <div className="inline-flex items-center animate-marquee whitespace-nowrap will-change-transform">
-        {/* Original content */}
-        <span className="inline-flex items-center gap-4 sm:gap-6 px-5 sm:px-8 text-sm sm:text-base font-medium">
-          <span className="font-semibold">{ticker}</span>
-          <span className="opacity-80">•</span>
-          <span className="inline-flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5" />
-            <span>{ngnUsd}</span>
-          </span>
+      {/* Breaking News Ticker - Fox Style */}
+      <div className="bg-gradient-to-r from-red-700 to-red-600 text-white overflow-hidden shadow-sm">
+        <div className="flex items-center h-9 sm:h-10">
+          {/* Fixed left label - "HOT" */}
+          <div className="bg-white text-red-700 px-4 font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center h-full flex-shrink-0 z-10 relative shadow-[2px_0_6px_rgba(0,0,0,0.3)]">
+            <Link href="/blog" className="hover:underline">HOT</Link>
+          </div>
 
-          {deferredPrompt && (
-            <>
-              <span className="opacity-80">•</span>
-              <button
-                onClick={handleInstall}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Install App
-              </button>
-            </>
-          )}
+          {/* Scrolling area */}
+          <div
+            className="flex-1 overflow-hidden"
+            onMouseEnter={(e) => e.currentTarget.classList.add('pause-marquee')}
+            onMouseLeave={(e) => e.currentTarget.classList.remove('pause-marquee')}
+            onTouchStart={(e) => e.currentTarget.classList.add('pause-marquee')}
+            onTouchEnd={(e) => {
+              setTimeout(() => e.currentTarget.classList.remove('pause-marquee'), 80);
+            }}
+          >
+            <div className="inline-flex items-center animate-marquee whitespace-nowrap will-change-transform min-w-max">
+              {/* First copy */}
+              <div className="inline-flex items-center gap-4 sm:gap-6 px-5 sm:px-8 text-sm sm:text-base font-medium">
+                <span className="font-semibold">{ticker}</span>
+                <span className="opacity-80">•</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>{ngnUsd}</span>
+                </span>
 
-          {/* Visual separator for smooth loop */}
-          <span className="opacity-60 mx-2 sm:mx-4">••••</span>
-        </span>
+                {deferredPrompt && (
+                  <>
+                    <span className="opacity-80">•</span>
+                    <button
+                      onClick={handleInstall}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Install App
+                    </button>
+                  </>
+                )}
+              </div>
 
-        {/* Duplicate for seamless loop */}
-        <span className="inline-flex items-center gap-4 sm:gap-6 px-5 sm:px-8 text-sm sm:text-base font-medium">
-          <span className="font-semibold">{ticker}</span>
-          <span className="opacity-80">•</span>
-          <span className="inline-flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5" />
-            <span>{ngnUsd}</span>
-          </span>
+              {/* Separator */}
+              <div className="inline-flex items-center opacity-60 mx-4 sm:mx-8">••••</div>
 
-          {deferredPrompt && (
-            <>
-              <span className="opacity-80">•</span>
-              <button
-                onClick={handleInstall}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Install App
-              </button>
-            </>
-          )}
+              {/* Second copy for seamless loop */}
+              <div className="inline-flex items-center gap-4 sm:gap-6 px-5 sm:px-8 text-sm sm:text-base font-medium">
+                <span className="font-semibold">{ticker}</span>
+                <span className="opacity-80">•</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>{ngnUsd}</span>
+                </span>
 
-          <span className="opacity-60 mx-2 sm:mx-4">••••</span>
-        </span>
+                {deferredPrompt && (
+                  <>
+                    <span className="opacity-80">•</span>
+                    <button
+                      onClick={handleInstall}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Install App
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
       {/* Header - Fox News Style */}
       <header className="sticky top-0 z-40 bg-white dark:bg-neutral-900 border-b-4 border-red-600 shadow-md pt-safe">
@@ -475,18 +501,24 @@ export default function ClientLayout({
                     <TrendingUp className="w-5 h-5" /> Trending Now
                   </h3>
                   <ol className="space-y-3">
-                    {trending.slice(0, 6).map((post, i) => (
-                      <li key={post.slug} className="flex gap-3 group">
-                        <span className="font-black text-xl text-red-600 w-6 flex-shrink-0">{i + 1}</span>
-                        <Link
-                          href={`/post/${post.slug}`}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="text-sm font-semibold line-clamp-2 hover:text-red-600 transition flex-1 min-w-0"
-                        >
-                          {post.title}
-                        </Link>
+                    {trending && trending.length > 0 ? (
+                      trending.slice(0, 6).map((post, i) => (
+                        <li key={post.slug} className="flex gap-3 group">
+                          <span className="font-black text-xl text-red-600 w-6 flex-shrink-0">{i + 1}</span>
+                          <Link
+                            href={`/post/${post.slug}`}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-sm font-semibold line-clamp-2 hover:text-red-600 transition flex-1 min-w-0"
+                          >
+                            {post.title}
+                          </Link>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-sm text-gray-500 dark:text-gray-400 italic py-4 text-center">
+                        No trending articles available
                       </li>
-                    ))}
+                    )}
                   </ol>
                 </section>
 
@@ -601,7 +633,7 @@ export default function ClientLayout({
                 </ul>
               </div>
 
-              {/* Trending */}
+              {/* Trending - Shows the trending articles */}
               <div className="bg-white dark:bg-neutral-900 border-2 border-gray-200 dark:border-neutral-800 rounded-lg overflow-hidden shadow-sm">
                 <div className="bg-gradient-to-r from-red-700 to-red-600 text-white p-3">
                   <h3 className="font-black text-sm uppercase tracking-wide flex items-center gap-2">
@@ -609,19 +641,30 @@ export default function ClientLayout({
                   </h3>
                 </div>
                 <ol className="divide-y divide-gray-200 dark:divide-neutral-800">
-                  {trending.map((post, i) => (
-                    <li key={post.slug} className="p-4 hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
-                      <div className="flex gap-3">
-                        <span className="font-black text-2xl text-red-600 leading-none flex-shrink-0">{i + 1}</span>
-                        <Link
-                          href={`/post/${post.slug}`}
-                          className="text-sm font-bold hover:text-red-600 line-clamp-3 flex-1 leading-tight min-w-0"
-                        >
-                          {post.title}
-                        </Link>
-                      </div>
+                  {trending && trending.length > 0 ? (
+                    trending.map((post, i) => (
+                      <li key={post.slug} className="p-4 hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
+                        <div className="flex gap-3">
+                          <span className="font-black text-2xl text-red-600 leading-none flex-shrink-0">{i + 1}</span>
+                          <Link
+                            href={`/post/${post.slug}`}
+                            className="text-sm font-bold hover:text-red-600 line-clamp-3 flex-1 leading-tight min-w-0"
+                          >
+                            {post.title}
+                          </Link>
+                        </div>
+                        {post.views && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9">
+                            {post.views.toLocaleString()} views
+                          </div>
+                        )}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="p-4 text-sm text-gray-500 dark:text-gray-400 italic text-center">
+                      No trending articles available
                     </li>
-                  ))}
+                  )}
                 </ol>
               </div>
             </aside>
